@@ -1,390 +1,1226 @@
-// Localization facade sourced from lib/l10n/app_*.arb.
-// Flutter's gen-l10n output is kept separately in generated_localizations.dart
-// so this stable lookup API remains compatible with the app's lightweight UI.
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-class AppLocalizations {
-  final Locale locale;
-  const AppLocalizations(this.locale);
-  static AppLocalizations? of(BuildContext context) => Localizations.of<AppLocalizations>(context, AppLocalizations);
-  static const delegate = _AppLocalizationsDelegate();
-  static const localizationsDelegates = [delegate];
-  static const supportedLocales = [Locale('en'), Locale('es')];
-  String t(String key, [Map<String, Object?> values = const {}]) {
-    final source = locale.languageCode == 'es' ? _es : _en;
-    var value = source[key] ?? _en[key] ?? key;
-    values.forEach((name, replacement) { value = value.replaceAll('{$name}', '$replacement'); });
-    return value;
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('es'),
+  ];
+
+  /// No description provided for @appName.
+  ///
+  /// In en, this message translates to:
+  /// **'Cercano a Dios'**
+  String get appName;
+
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cercano\na Dios'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a little space for prayer.\nGive thanks. Speak from the heart.\nReturn tomorrow.'**
+  String get welcomeBody;
+
+  /// No description provided for @onboardingTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'A little closer, every day'**
+  String get onboardingTagline;
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make room\nfor God.'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A quiet moment. A grateful heart. A new beginning.'**
+  String get onboardingSubtitle;
+
+  /// No description provided for @onboardingPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'A private Catholic prayer companion. Your voice and your journey stay on this device.'**
+  String get onboardingPrivacy;
+
+  /// No description provided for @beginJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin my journey'**
+  String get beginJourney;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @alarms.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarms'**
+  String get alarms;
+
+  /// No description provided for @journal.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get journal;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @milestones.
+  ///
+  /// In en, this message translates to:
+  /// **'Your milestones'**
+  String get milestones;
+
+  /// No description provided for @beginMoment.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin a moment'**
+  String get beginMoment;
+
+  /// No description provided for @yourRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rhythm'**
+  String get yourRhythm;
+
+  /// No description provided for @dayStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day streak'**
+  String dayStreak(int count);
+
+  /// No description provided for @daysStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day streak'**
+  String daysStreak(int count);
+
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
+
+  /// No description provided for @todayComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'You made time for prayer today.'**
+  String get todayComplete;
+
+  /// No description provided for @todayIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'One small moment is enough to begin.'**
+  String get todayIncomplete;
+
+  /// No description provided for @weekProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 7 days this week'**
+  String weekProgress(int count);
+
+  /// No description provided for @gentleInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'A gentle invitation'**
+  String get gentleInvitation;
+
+  /// No description provided for @makePrayerPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Make prayer part of your day.'**
+  String get makePrayerPart;
+
+  /// No description provided for @setFirstAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your first alarm'**
+  String get setFirstAlarm;
+
+  /// No description provided for @manageAlarms.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your alarms'**
+  String get manageAlarms;
+
+  /// No description provided for @moreWays.
+  ///
+  /// In en, this message translates to:
+  /// **'More ways to pray'**
+  String get moreWays;
+
+  /// No description provided for @prayerMoment.
+  ///
+  /// In en, this message translates to:
+  /// **'Your prayer moment'**
+  String get prayerMoment;
+
+  /// No description provided for @beStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Be still for a moment'**
+  String get beStill;
+
+  /// No description provided for @usePrayerBeginning.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this prayer as a beginning, then speak in your own words.'**
+  String get usePrayerBeginning;
+
+  /// No description provided for @voiceStaysDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice stays on this device. You can listen again or delete it at any time.'**
+  String get voiceStaysDevice;
+
+  /// No description provided for @speakPrayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak my prayer'**
+  String get speakPrayer;
+
+  /// No description provided for @silentMoment.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a silent moment'**
+  String get silentMoment;
+
+  /// No description provided for @recording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording · {time}'**
+  String recording(String time);
+
+  /// No description provided for @finishRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish recording'**
+  String get finishRecording;
+
+  /// No description provided for @recordingLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to two minutes. Tap Finish whenever you are ready.'**
+  String get recordingLimit;
+
+  /// No description provided for @yourRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recording · {seconds}s'**
+  String yourRecording(int seconds);
+
+  /// No description provided for @listen.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get listen;
+
+  /// No description provided for @stopPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop playback'**
+  String get stopPlayback;
+
+  /// No description provided for @saveComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and complete'**
+  String get saveComplete;
+
+  /// No description provided for @recordAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Record again'**
+  String get recordAgain;
+
+  /// No description provided for @completeWithoutAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete without audio'**
+  String get completeWithoutAudio;
+
+  /// No description provided for @leaveWithoutSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave without saving'**
+  String get leaveWithoutSaving;
+
+  /// No description provided for @momentWellSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'A moment well spent.'**
+  String get momentWellSpent;
+
+  /// No description provided for @prayerSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your prayer has been saved.\n{count} day streak.'**
+  String prayerSaved(int count);
+
+  /// No description provided for @newMilestone.
+  ///
+  /// In en, this message translates to:
+  /// **'A new milestone on your journey. Find your new badge in Your progress.'**
+  String get newMilestone;
+
+  /// No description provided for @returnToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to today'**
+  String get returnToday;
+
+  /// No description provided for @recordingPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get recordingPrivacy;
+
+  /// No description provided for @recordingStorageFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording storage is full. Free some space in Settings or reflect silently.'**
+  String get recordingStorageFull;
+
+  /// No description provided for @recordingStartError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start recording. You can still reflect silently.'**
+  String get recordingStartError;
+
+  /// No description provided for @recordingReviewError.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording was interrupted. Try playback, record again, or complete without audio.'**
+  String get recordingReviewError;
+
+  /// No description provided for @recordingPlaybackError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play this recording. Please record again or complete without audio.'**
+  String get recordingPlaybackError;
+
+  /// No description provided for @saveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this moment. Please try again.'**
+  String get saveError;
+
+  /// No description provided for @alarmTime.
+  ///
+  /// In en, this message translates to:
+  /// **'A time for prayer'**
+  String get alarmTime;
+
+  /// No description provided for @alarmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause and give thanks with Cercano a Dios.'**
+  String get alarmBody;
+
+  /// No description provided for @makeSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a little space'**
+  String get makeSpace;
+
+  /// No description provided for @prayerTime.
+  ///
+  /// In en, this message translates to:
+  /// **'A time for prayer.'**
+  String get prayerTime;
+
+  /// No description provided for @soundReminderMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound reminder mode'**
+  String get soundReminderMode;
+
+  /// No description provided for @soundReminderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This iPhone supports notification reminders, not persistent ringing alarms. Sound follows your notification and Focus settings. Continue with a reminder?'**
+  String get soundReminderDescription;
+
+  /// No description provided for @continueAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueAction;
+
+  /// No description provided for @repeatOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat on'**
+  String get repeatOn;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @nextAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {date} at {time}'**
+  String nextAlarm(String date, String time);
+
+  /// No description provided for @setupIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup incomplete — tap Edit to retry'**
+  String get setupIncomplete;
+
+  /// No description provided for @paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get paused;
+
+  /// No description provided for @scheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get scheduled;
+
+  /// No description provided for @permissionNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Device permission needed'**
+  String get permissionNeeded;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @addPrayerTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a prayer time'**
+  String get addPrayerTime;
+
+  /// No description provided for @upToFive.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to five prayer times.'**
+  String get upToFive;
+
+  /// No description provided for @testAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Test in 10 seconds'**
+  String get testAlarm;
+
+  /// No description provided for @stopAlarmNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop always silences the alarm. You never need to record a prayer to dismiss it.'**
+  String get stopAlarmNote;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open device settings'**
+  String get openSettings;
+
+  /// No description provided for @journalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moments to remember.'**
+  String get journalTitle;
+
+  /// No description provided for @journalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A private record of the time you made for God.'**
+  String get journalSubtitle;
+
+  /// No description provided for @firstMomentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first moment will appear here. Begin a prayer from Today.'**
+  String get firstMomentHint;
+
+  /// No description provided for @spokenPrayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Spoken prayer'**
+  String get spokenPrayer;
+
+  /// No description provided for @silentReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Silent reflection'**
+  String get silentReflection;
+
+  /// No description provided for @deleteRecordingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete recording?'**
+  String get deleteRecordingTitle;
+
+  /// No description provided for @deleteRecordingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your completed moment and streak will stay.'**
+  String get deleteRecordingDescription;
+
+  /// No description provided for @deleteMomentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this moment?'**
+  String get deleteMomentTitle;
+
+  /// No description provided for @deleteMomentDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Its recording will be removed and your progress will be recalculated.'**
+  String get deleteMomentDescription;
+
+  /// No description provided for @loadEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Load earlier moments'**
+  String get loadEarlier;
+
+  /// No description provided for @progressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep showing up.'**
+  String get progressTitle;
+
+  /// No description provided for @smallMoments.
+  ///
+  /// In en, this message translates to:
+  /// **'Small moments add up'**
+  String get smallMoments;
+
+  /// No description provided for @bestAndMoments.
+  ///
+  /// In en, this message translates to:
+  /// **'Best: {best} days · {total} moments'**
+  String bestAndMoments(int best, int total);
+
+  /// No description provided for @milestoneReached.
+  ///
+  /// In en, this message translates to:
+  /// **'A milestone reached'**
+  String get milestoneReached;
+
+  /// No description provided for @oneMoment.
+  ///
+  /// In en, this message translates to:
+  /// **'One moment at a time'**
+  String get oneMoment;
+
+  /// No description provided for @progressDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'These milestones celebrate your practice. They do not measure your faith. A missed day is always an invitation to begin again.'**
+  String get progressDisclaimer;
+
+  /// No description provided for @spaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple. Private. Yours.'**
+  String get spaceTitle;
+
+  /// No description provided for @storageUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} MB of 100 MB'**
+  String storageUsage(String used);
+
+  /// No description provided for @storageNearLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recordings are nearing the limit. You can free space without losing your streak.'**
+  String get storageNearLimit;
+
+  /// No description provided for @storagePrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice recordings stay on this device.'**
+  String get storagePrivate;
+
+  /// No description provided for @deleteAllRecordings.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all recordings'**
+  String get deleteAllRecordings;
+
+  /// No description provided for @deleteAllRecordingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all recordings?'**
+  String get deleteAllRecordingsTitle;
+
+  /// No description provided for @deleteAllRecordingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'All audio will be deleted. Completed moments, streaks and badges stay.'**
+  String get deleteAllRecordingsDescription;
+
+  /// No description provided for @permissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get permissions;
+
+  /// No description provided for @permissionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone and alarm access'**
+  String get permissionLabel;
+
+  /// No description provided for @aboutData.
+  ///
+  /// In en, this message translates to:
+  /// **'About your data'**
+  String get aboutData;
+
+  /// No description provided for @privacyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'No account. No uploads. No ads. Your prayers are stored privately on this device. Uninstalling the app or losing the device can remove your history and recordings.'**
+  String get privacyDescription;
+
+  /// No description provided for @timezoneNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaks use the local date when a moment is completed. Travel across time zones may skip a day or repeat one. You can always begin again.'**
+  String get timezoneNote;
+
+  /// No description provided for @startFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh'**
+  String get startFresh;
+
+  /// No description provided for @resetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Cercano a Dios?'**
+  String get resetTitle;
+
+  /// No description provided for @resetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes your history, audio, alarms, streaks and badges from this device. It cannot be undone.'**
+  String get resetDescription;
+
+  /// No description provided for @deleteAppData.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all app data'**
+  String get deleteAppData;
+
+  /// No description provided for @footer.
+  ///
+  /// In en, this message translates to:
+  /// **'Cercano a Dios · 0.1.0\nA little closer, every day.'**
+  String get footer;
+
+  /// No description provided for @badgeFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First moment'**
+  String get badgeFirst;
+
+  /// No description provided for @badgeStreak3.
+  ///
+  /// In en, this message translates to:
+  /// **'Three faithful days'**
+  String get badgeStreak3;
+
+  /// No description provided for @badgeStreak7.
+  ///
+  /// In en, this message translates to:
+  /// **'A week of prayer'**
+  String get badgeStreak7;
+
+  /// No description provided for @badgeStreak30.
+  ///
+  /// In en, this message translates to:
+  /// **'Thirty days together'**
+  String get badgeStreak30;
+
+  /// No description provided for @badgeTotal10.
+  ///
+  /// In en, this message translates to:
+  /// **'Ten moments'**
+  String get badgeTotal10;
+
+  /// No description provided for @badgeTotal50.
+  ///
+  /// In en, this message translates to:
+  /// **'Fifty moments'**
+  String get badgeTotal50;
+
+  /// No description provided for @badgeMilestoneDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A milestone reached'**
+  String get badgeMilestoneDescription;
+
+  /// No description provided for @badgeLockedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'One moment at a time'**
+  String get badgeLockedDescription;
+
+  /// No description provided for @promptTitleP01.
+  ///
+  /// In en, this message translates to:
+  /// **'For this new day'**
+  String get promptTitleP01;
+
+  /// No description provided for @promptTextP01.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord, thank you for this new day. Help me receive it with an open heart.'**
+  String get promptTextP01;
+
+  /// No description provided for @promptTitleP02.
+  ///
+  /// In en, this message translates to:
+  /// **'A small gift'**
+  String get promptTitleP02;
+
+  /// No description provided for @promptTextP02.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavenly Father, today I am grateful for ___. Help me notice your gifts in ordinary things.'**
+  String get promptTextP02;
+
+  /// No description provided for @promptTitleP03.
+  ///
+  /// In en, this message translates to:
+  /// **'A peaceful heart'**
+  String get promptTitleP03;
+
+  /// No description provided for @promptTextP03.
+  ///
+  /// In en, this message translates to:
+  /// **'Jesus, meet me in my worries. Teach me to trust you one small step at a time.'**
+  String get promptTextP03;
+
+  /// No description provided for @promptTitleP04.
+  ///
+  /// In en, this message translates to:
+  /// **'For those I love'**
+  String get promptTitleP04;
+
+  /// No description provided for @promptTextP04.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord, bless the people I love. Help me show them patience and kindness today.'**
+  String get promptTextP04;
+
+  /// No description provided for @promptTitleP05.
+  ///
+  /// In en, this message translates to:
+  /// **'An evening pause'**
+  String get promptTitleP05;
+
+  /// No description provided for @promptTextP05.
+  ///
+  /// In en, this message translates to:
+  /// **'Father, thank you for walking with me today. I place this day in your hands.'**
+  String get promptTextP05;
+
+  /// No description provided for @promptTitleP06.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin again'**
+  String get promptTitleP06;
+
+  /// No description provided for @promptTextP06.
+  ///
+  /// In en, this message translates to:
+  /// **'Merciful Jesus, help me begin again when I fall short, and lead me toward what is good.'**
+  String get promptTextP06;
+
+  /// No description provided for @promptTitleP07.
+  ///
+  /// In en, this message translates to:
+  /// **'A generous spirit'**
+  String get promptTitleP07;
+
+  /// No description provided for @promptTextP07.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord, show me someone I can help today. Make me generous with my time and attention.'**
+  String get promptTextP07;
+
+  /// No description provided for @promptTitleP08.
+  ///
+  /// In en, this message translates to:
+  /// **'For daily bread'**
+  String get promptTitleP08;
+
+  /// No description provided for @promptTextP08.
+  ///
+  /// In en, this message translates to:
+  /// **'Father, thank you for the food and shelter I have. Keep those in need close to my heart.'**
+  String get promptTextP08;
+
+  /// No description provided for @promptTitleP09.
+  ///
+  /// In en, this message translates to:
+  /// **'In the quiet'**
+  String get promptTitleP09;
+
+  /// No description provided for @promptTextP09.
+  ///
+  /// In en, this message translates to:
+  /// **'Holy Spirit, quiet the noise within me. Help me listen with a willing heart.'**
+  String get promptTextP09;
+
+  /// No description provided for @promptTitleP10.
+  ///
+  /// In en, this message translates to:
+  /// **'For my work'**
+  String get promptTitleP10;
+
+  /// No description provided for @promptTextP10.
+  ///
+  /// In en, this message translates to:
+  /// **'Jesus, guide the work of my hands. May I serve others with honesty and care.'**
+  String get promptTextP10;
+
+  /// No description provided for @promptTitleP11.
+  ///
+  /// In en, this message translates to:
+  /// **'When I am tired'**
+  String get promptTitleP11;
+
+  /// No description provided for @promptTextP11.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord, I bring you my tiredness. Help me rest and receive the care I need.'**
+  String get promptTextP11;
+
+  /// No description provided for @promptTitleP12.
+  ///
+  /// In en, this message translates to:
+  /// **'A grateful memory'**
+  String get promptTitleP12;
+
+  /// No description provided for @promptTextP12.
+  ///
+  /// In en, this message translates to:
+  /// **'Father, thank you for a moment of joy I remember today: ___.'**
+  String get promptTextP12;
+
+  /// No description provided for @promptTitleP13.
+  ///
+  /// In en, this message translates to:
+  /// **'The gift of friendship'**
+  String get promptTitleP13;
+
+  /// No description provided for @promptTextP13.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord, thank you for those who walk beside me. Help me be a faithful friend.'**
+  String get promptTextP13;
+
+  /// No description provided for @promptTitleP14.
+  ///
+  /// In en, this message translates to:
+  /// **'For forgiveness'**
+  String get promptTitleP14;
+
+  /// No description provided for @promptTextP14.
+  ///
+  /// In en, this message translates to:
+  /// **'Merciful Father, give me courage to seek forgiveness and grace to forgive others.'**
+  String get promptTextP14;
+
+  /// No description provided for @promptTitleP15.
+  ///
+  /// In en, this message translates to:
+  /// **'With Mary'**
+  String get promptTitleP15;
+
+  /// No description provided for @promptTextP15.
+  ///
+  /// In en, this message translates to:
+  /// **'Mary, Mother of Jesus, pray for me as I seek to follow your Son today.'**
+  String get promptTextP15;
+
+  /// No description provided for @promptTitleP16.
+  ///
+  /// In en, this message translates to:
+  /// **'A patient response'**
+  String get promptTitleP16;
+
+  /// No description provided for @promptTextP16.
+  ///
+  /// In en, this message translates to:
+  /// **'Holy Spirit, help me pause before I speak. Let my words carry patience and truth.'**
+  String get promptTextP16;
+
+  /// No description provided for @promptTitleP17.
+  ///
+  /// In en, this message translates to:
+  /// **'For the lonely'**
+  String get promptTitleP17;
+
+  /// No description provided for @promptTextP17.
+  ///
+  /// In en, this message translates to:
+  /// **'Jesus, draw near to those who feel alone. Show me how to offer companionship.'**
+  String get promptTextP17;
+
+  /// No description provided for @promptTitleP18.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust in uncertainty'**
+  String get promptTitleP18;
+
+  /// No description provided for @promptTextP18.
+  ///
+  /// In en, this message translates to:
+  /// **'Father, I do not know everything this day will bring. Help me take the next good step.'**
+  String get promptTextP18;
+
+  /// No description provided for @promptTitleP19.
+  ///
+  /// In en, this message translates to:
+  /// **'For creation'**
+  String get promptTitleP19;
+
+  /// No description provided for @promptTextP19.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord, thank you for the beauty of your creation. Teach me to care for our common home.'**
+  String get promptTextP19;
+
+  /// No description provided for @promptTitleP20.
+  ///
+  /// In en, this message translates to:
+  /// **'A simple offering'**
+  String get promptTitleP20;
+
+  /// No description provided for @promptTextP20.
+  ///
+  /// In en, this message translates to:
+  /// **'Jesus, I offer you this small moment. Help me grow in faith, hope, and love.'**
+  String get promptTextP20;
+
+  /// No description provided for @appOpenError.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not open your prayer journal.'**
+  String get appOpenError;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @soundReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound reminders on this iPhone'**
+  String get soundReminders;
+
+  /// No description provided for @ringingAlarms.
+  ///
+  /// In en, this message translates to:
+  /// **'Ringing alarms with Stop and Snooze'**
+  String get ringingAlarms;
+
+  /// No description provided for @deviceAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Device access: {permission}'**
+  String deviceAccess(Object permission);
+
+  /// No description provided for @listenDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen · {seconds}s'**
+  String listenDuration(Object seconds);
+
+  /// No description provided for @deleteAudioKeepMoment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete audio, keep moment'**
+  String get deleteAudioKeepMoment;
+
+  /// No description provided for @deleteMoment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete moment'**
+  String get deleteMoment;
+
+  /// No description provided for @monday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get monday;
+
+  /// No description provided for @tuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get tuesday;
+
+  /// No description provided for @wednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get wednesday;
+
+  /// No description provided for @thursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get thursday;
+
+  /// No description provided for @friday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get friday;
+
+  /// No description provided for @saturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get saturday;
+
+  /// No description provided for @sunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get sunday;
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'completed'**
+  String get completed;
+
+  /// No description provided for @notCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'not completed'**
+  String get notCompleted;
+
+  /// No description provided for @durationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} seconds'**
+  String durationSeconds(Object seconds);
+
+  /// No description provided for @promptCategoryMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning'**
+  String get promptCategoryMorning;
+
+  /// No description provided for @promptCategoryGratitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude'**
+  String get promptCategoryGratitude;
+
+  /// No description provided for @promptCategoryPeace.
+  ///
+  /// In en, this message translates to:
+  /// **'Peace'**
+  String get promptCategoryPeace;
+
+  /// No description provided for @promptCategoryFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get promptCategoryFamily;
+
+  /// No description provided for @promptCategoryHope.
+  ///
+  /// In en, this message translates to:
+  /// **'Hope'**
+  String get promptCategoryHope;
+
+  /// No description provided for @promptCategoryService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get promptCategoryService;
+
+  /// No description provided for @promptCategoryFaith.
+  ///
+  /// In en, this message translates to:
+  /// **'Faith'**
+  String get promptCategoryFaith;
+
+  /// No description provided for @microphoneLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone sound level'**
+  String get microphoneLevel;
+
+  /// No description provided for @promptCategoryEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening'**
+  String get promptCategoryEvening;
 }
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
-  @override bool isSupported(Locale locale) => ['en', 'es'].contains(locale.languageCode);
-  @override Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
-  @override bool shouldReload(_AppLocalizationsDelegate old) => false;
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'es'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
-const _en = <String, String>{
 
-  "appName": "Cercano a Dios",
-  "onboardingTagline": "A little closer, every day",
-  "onboardingTitle": "Make room\nfor God.",
-  "onboardingSubtitle": "A quiet moment. A grateful heart. A new beginning.",
-  "onboardingPrivacy": "A private Catholic prayer companion. Your voice and your journey stay on this device.",
-  "beginJourney": "Begin my journey",
-  "today": "Today",
-  "alarms": "Alarms",
-  "journal": "Journal",
-  "settings": "Settings",
-  "milestones": "Your milestones",
-  "beginMoment": "Begin a moment",
-  "yourRhythm": "Your rhythm",
-  "dayStreak": "{count} day streak",
-  "daysStreak": "{count} day streak",
-  "view": "View",
-  "todayComplete": "You made time for prayer today.",
-  "todayIncomplete": "One small moment is enough to begin.",
-  "weekProgress": "{count} of 7 days this week",
-  "gentleInvitation": "A gentle invitation",
-  "makePrayerPart": "Make prayer part of your day.",
-  "setFirstAlarm": "Set your first alarm",
-  "manageAlarms": "Manage your alarms",
-  "moreWays": "More ways to pray",
-  "prayerMoment": "Your prayer moment",
-  "beStill": "Be still for a moment",
-  "usePrayerBeginning": "Use this prayer as a beginning, then speak in your own words.",
-  "voiceStaysDevice": "Your voice stays on this device. You can listen again or delete it at any time.",
-  "speakPrayer": "Speak my prayer",
-  "silentMoment": "Complete a silent moment",
-  "recording": "Recording · {time}",
-  "finishRecording": "Finish recording",
-  "recordingLimit": "Up to two minutes. Tap Finish whenever you are ready.",
-  "yourRecording": "Your recording · {seconds}s",
-  "listen": "Listen",
-  "stopPlayback": "Stop playback",
-  "saveComplete": "Save and complete",
-  "recordAgain": "Record again",
-  "completeWithoutAudio": "Complete without audio",
-  "leaveWithoutSaving": "Leave without saving",
-  "momentWellSpent": "A moment well spent.",
-  "prayerSaved": "Your prayer has been saved.\n{count} day streak.",
-  "newMilestone": "A new milestone on your journey. Find your new badge in Your progress.",
-  "returnToday": "Return to today",
-  "recordingPrivacy": "Recording",
-  "recordingStorageFull": "Recording storage is full. Free some space in Settings or reflect silently.",
-  "recordingStartError": "Could not start recording. You can still reflect silently.",
-  "recordingReviewError": "Recording was interrupted. Try playback, record again, or complete without audio.",
-  "recordingPlaybackError": "Could not play this recording. Please record again or complete without audio.",
-  "saveError": "Could not save this moment. Please try again.",
-  "alarmTime": "A time for prayer",
-  "alarmBody": "Pause and give thanks with Cercano a Dios.",
-  "makeSpace": "Make a little space",
-  "prayerTime": "A time for prayer.",
-  "soundReminderMode": "Sound reminder mode",
-  "soundReminderDescription": "This iPhone supports notification reminders, not persistent ringing alarms. Sound follows your notification and Focus settings. Continue with a reminder?",
-  "continueAction": "Continue",
-  "repeatOn": "Repeat on",
-  "cancel": "Cancel",
-  "save": "Save",
-  "nextAlarm": "Next: {date} at {time}",
-  "setupIncomplete": "Setup incomplete — tap Edit to retry",
-  "paused": "Paused",
-  "scheduled": "Scheduled",
-  "permissionNeeded": "Device permission needed",
-  "edit": "Edit",
-  "delete": "Delete",
-  "addPrayerTime": "Add a prayer time",
-  "upToFive": "Up to five prayer times.",
-  "testAlarm": "Test in 10 seconds",
-  "stopAlarmNote": "Stop always silences the alarm. You never need to record a prayer to dismiss it.",
-  "openSettings": "Open device settings",
-  "journalTitle": "Moments to remember.",
-  "journalSubtitle": "A private record of the time you made for God.",
-  "firstMomentHint": "Your first moment will appear here. Begin a prayer from Today.",
-  "spokenPrayer": "Spoken prayer",
-  "silentReflection": "Silent reflection",
-  "deleteRecordingTitle": "Delete recording?",
-  "deleteRecordingDescription": "Your completed moment and streak will stay.",
-  "deleteMomentTitle": "Delete this moment?",
-  "deleteMomentDescription": "Its recording will be removed and your progress will be recalculated.",
-  "loadEarlier": "Load earlier moments",
-  "progressTitle": "Keep showing up.",
-  "smallMoments": "Small moments add up",
-  "bestAndMoments": "Best: {best} days · {total} moments",
-  "milestoneReached": "A milestone reached",
-  "oneMoment": "One moment at a time",
-  "progressDisclaimer": "These milestones celebrate your practice. They do not measure your faith. A missed day is always an invitation to begin again.",
-  "spaceTitle": "Simple. Private. Yours.",
-  "storageUsage": "{used} MB of 100 MB",
-  "storageNearLimit": "Your recordings are nearing the limit. You can free space without losing your streak.",
-  "storagePrivate": "Your voice recordings stay on this device.",
-  "deleteAllRecordings": "Delete all recordings",
-  "deleteAllRecordingsTitle": "Delete all recordings?",
-  "deleteAllRecordingsDescription": "All audio will be deleted. Completed moments, streaks and badges stay.",
-  "permissions": "Permissions",
-  "permissionLabel": "Microphone and alarm access",
-  "aboutData": "About your data",
-  "privacyDescription": "No account. No uploads. No ads. Your prayers are stored privately on this device. Uninstalling the app or losing the device can remove your history and recordings.",
-  "timezoneNote": "Streaks use the local date when a moment is completed. Travel across time zones may skip a day or repeat one. You can always begin again.",
-  "startFresh": "Start fresh",
-  "resetTitle": "Reset Cercano a Dios?",
-  "resetDescription": "This deletes your history, audio, alarms, streaks and badges from this device. It cannot be undone.",
-  "deleteAppData": "Delete all app data",
-  "footer": "Cercano a Dios · 0.1.0\nA little closer, every day.",
-  "badgeFirst": "First moment",
-  "badgeStreak3": "Three faithful days",
-  "badgeStreak7": "A week of prayer",
-  "badgeStreak30": "Thirty days together",
-  "badgeTotal10": "Ten moments",
-  "badgeTotal50": "Fifty moments",
-  "badgeMilestoneDescription": "A milestone reached",
-  "badgeLockedDescription": "One moment at a time",
-  "promptTitleP01": "For this new day",
-  "promptTextP01": "Lord, thank you for this new day. Help me receive it with an open heart.",
-  "promptTitleP02": "A small gift",
-  "promptTextP02": "Heavenly Father, today I am grateful for ___. Help me notice your gifts in ordinary things.",
-  "promptTitleP03": "A peaceful heart",
-  "promptTextP03": "Jesus, meet me in my worries. Teach me to trust you one small step at a time.",
-  "promptTitleP04": "For those I love",
-  "promptTextP04": "Lord, bless the people I love. Help me show them patience and kindness today.",
-  "promptTitleP05": "An evening pause",
-  "promptTextP05": "Father, thank you for walking with me today. I place this day in your hands.",
-  "promptTitleP06": "Begin again",
-  "promptTextP06": "Merciful Jesus, help me begin again when I fall short, and lead me toward what is good.",
-  "promptTitleP07": "A generous spirit",
-  "promptTextP07": "Lord, show me someone I can help today. Make me generous with my time and attention.",
-  "promptTitleP08": "For daily bread",
-  "promptTextP08": "Father, thank you for the food and shelter I have. Keep those in need close to my heart.",
-  "promptTitleP09": "In the quiet",
-  "promptTextP09": "Holy Spirit, quiet the noise within me. Help me listen with a willing heart.",
-  "promptTitleP10": "For my work",
-  "promptTextP10": "Jesus, guide the work of my hands. May I serve others with honesty and care.",
-  "promptTitleP11": "When I am tired",
-  "promptTextP11": "Lord, I bring you my tiredness. Help me rest and receive the care I need.",
-  "promptTitleP12": "A grateful memory",
-  "promptTextP12": "Father, thank you for a moment of joy I remember today: ___.",
-  "promptTitleP13": "The gift of friendship",
-  "promptTextP13": "Lord, thank you for those who walk beside me. Help me be a faithful friend.",
-  "promptTitleP14": "For forgiveness",
-  "promptTextP14": "Merciful Father, give me courage to seek forgiveness and grace to forgive others.",
-  "promptTitleP15": "With Mary",
-  "promptTextP15": "Mary, Mother of Jesus, pray for me as I seek to follow your Son today.",
-  "promptTitleP16": "A patient response",
-  "promptTextP16": "Holy Spirit, help me pause before I speak. Let my words carry patience and truth.",
-  "promptTitleP17": "For the lonely",
-  "promptTextP17": "Jesus, draw near to those who feel alone. Show me how to offer companionship.",
-  "promptTitleP18": "Trust in uncertainty",
-  "promptTextP18": "Father, I do not know everything this day will bring. Help me take the next good step.",
-  "promptTitleP19": "For creation",
-  "promptTextP19": "Lord, thank you for the beauty of your creation. Teach me to care for our common home.",
-  "promptTitleP20": "A simple offering",
-  "promptTextP20": "Jesus, I offer you this small moment. Help me grow in faith, hope, and love.",
-  "appOpenError": "We could not open your prayer journal.",
-  "tryAgain": "Try again",
-  "soundReminders": "Sound reminders on this iPhone",
-  "ringingAlarms": "Ringing alarms with Stop and Snooze",
-  "deviceAccess": "Device access: {permission}",
-  "listenDuration": "Listen · {seconds}s",
-  "deleteAudioKeepMoment": "Delete audio, keep moment",
-  "deleteMoment": "Delete moment",
-  "monday": "Monday",
-  "tuesday": "Tuesday",
-  "wednesday": "Wednesday",
-  "thursday": "Thursday",
-  "friday": "Friday",
-  "saturday": "Saturday",
-  "sunday": "Sunday",
-  "completed": "completed",
-  "notCompleted": "not completed",
-  "durationSeconds": "{seconds} seconds",
-  "promptCategoryMorning": "Morning",
-  "promptCategoryGratitude": "Gratitude",
-  "promptCategoryPeace": "Peace",
-  "promptCategoryFamily": "Family",
-  "promptCategoryHope": "Hope",
-  "promptCategoryService": "Service",
-  "promptCategoryFaith": "Faith",
-  "microphoneLevel": "Microphone sound level",
-  "promptCategoryEvening": "Evening",
-};
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+  }
 
-const _es = <String, String>{
-  "appName": "Cercano a Dios",
-  "onboardingTagline": "Un poco más cerca, cada día",
-  "onboardingTitle": "Haz espacio\npara Dios.",
-  "onboardingSubtitle": "Un momento de calma. Un corazón agradecido. Un nuevo comienzo.",
-  "onboardingPrivacy": "Un compañero católico de oración privado. Tu voz y tu camino permanecen en este dispositivo.",
-  "beginJourney": "Comenzar mi camino",
-  "today": "Hoy",
-  "alarms": "Alarmas",
-  "journal": "Diario",
-  "settings": "Ajustes",
-  "milestones": "Tus logros",
-  "beginMoment": "Comenzar un momento",
-  "yourRhythm": "Tu ritmo",
-  "dayStreak": "Racha de {count} día",
-  "daysStreak": "Racha de {count} días",
-  "view": "Ver",
-  "todayComplete": "Hoy hiciste tiempo para orar.",
-  "todayIncomplete": "Un pequeño momento es suficiente para comenzar.",
-  "weekProgress": "{count} de 7 días esta semana",
-  "gentleInvitation": "Una invitación amable",
-  "makePrayerPart": "Haz espacio para la oración en tu día.",
-  "setFirstAlarm": "Configurar mi primera alarma",
-  "manageAlarms": "Administrar mis alarmas",
-  "moreWays": "Más formas de orar",
-  "prayerMoment": "Tu momento de oración",
-  "beStill": "Quédate en silencio un momento",
-  "usePrayerBeginning": "Usa esta oración como inicio y luego habla con tus propias palabras.",
-  "voiceStaysDevice": "Tu voz permanece en este dispositivo. Puedes escucharla de nuevo o borrarla cuando quieras.",
-  "speakPrayer": "Decir mi oración",
-  "silentMoment": "Completar un momento en silencio",
-  "recording": "Grabando · {time}",
-  "finishRecording": "Terminar grabación",
-  "recordingLimit": "Hasta dos minutos. Pulsa Terminar cuando estés listo.",
-  "yourRecording": "Tu grabación · {seconds}s",
-  "listen": "Escuchar",
-  "stopPlayback": "Detener reproducción",
-  "saveComplete": "Guardar y completar",
-  "recordAgain": "Grabar de nuevo",
-  "completeWithoutAudio": "Completar sin audio",
-  "leaveWithoutSaving": "Salir sin guardar",
-  "momentWellSpent": "Un momento bien vivido.",
-  "prayerSaved": "Tu oración se ha guardado.\nRacha de {count} días.",
-  "newMilestone": "Un nuevo logro en tu camino. Encuentra tu insignia en Tu progreso.",
-  "returnToday": "Volver a Hoy",
-  "recordingPrivacy": "Grabando",
-  "recordingStorageFull": "El almacenamiento de grabaciones está lleno. Libera espacio en Ajustes o reflexiona en silencio.",
-  "recordingStartError": "No se pudo iniciar la grabación. Aún puedes reflexionar en silencio.",
-  "recordingReviewError": "La grabación se interrumpió. Reprodúcela, graba de nuevo o completa sin audio.",
-  "recordingPlaybackError": "No se pudo reproducir esta grabación. Graba de nuevo o completa sin audio.",
-  "saveError": "No se pudo guardar este momento. Inténtalo de nuevo.",
-  "alarmTime": "Un momento para orar",
-  "alarmBody": "Haz una pausa y da gracias con Cercano a Dios.",
-  "makeSpace": "Haz un poco de espacio",
-  "prayerTime": "Un tiempo para orar.",
-  "soundReminderMode": "Modo de recordatorio con sonido",
-  "soundReminderDescription": "Este iPhone admite recordatorios con notificación, no alarmas persistentes. El sonido depende de tus ajustes de notificaciones y Concentración. ¿Continuar con un recordatorio?",
-  "continueAction": "Continuar",
-  "repeatOn": "Repetir los días",
-  "cancel": "Cancelar",
-  "save": "Guardar",
-  "nextAlarm": "Siguiente: {date} a las {time}",
-  "setupIncomplete": "Configuración incompleta — pulsa Editar para reintentar",
-  "paused": "En pausa",
-  "scheduled": "Programada",
-  "permissionNeeded": "Se necesita permiso del dispositivo",
-  "edit": "Editar",
-  "delete": "Borrar",
-  "addPrayerTime": "Añadir un horario de oración",
-  "upToFive": "Hasta cinco horarios de oración.",
-  "testAlarm": "Probar en 10 segundos",
-  "stopAlarmNote": "Detener siempre silencia la alarma. Nunca necesitas grabar una oración para descartarla.",
-  "openSettings": "Abrir ajustes del dispositivo",
-  "journalTitle": "Momentos para recordar.",
-  "journalSubtitle": "Un registro privado del tiempo que dedicaste a Dios.",
-  "firstMomentHint": "Tu primer momento aparecerá aquí. Comienza una oración desde Hoy.",
-  "spokenPrayer": "Oración hablada",
-  "silentReflection": "Reflexión en silencio",
-  "deleteRecordingTitle": "¿Borrar grabación?",
-  "deleteRecordingDescription": "Tu momento completado y tu racha permanecerán.",
-  "deleteMomentTitle": "¿Borrar este momento?",
-  "deleteMomentDescription": "Se eliminará la grabación y se recalculará tu progreso.",
-  "loadEarlier": "Cargar momentos anteriores",
-  "progressTitle": "Sigue estando presente.",
-  "smallMoments": "Los pequeños momentos suman",
-  "bestAndMoments": "Mejor racha: {best} días · {total} momentos",
-  "milestoneReached": "Logro alcanzado",
-  "oneMoment": "Un momento a la vez",
-  "progressDisclaimer": "Estos logros celebran tu práctica. No miden tu fe. Un día perdido siempre es una invitación a comenzar de nuevo.",
-  "spaceTitle": "Simple. Privado. Tuyo.",
-  "storageUsage": "{used} MB de 100 MB",
-  "storageNearLimit": "Tus grabaciones se acercan al límite. Puedes liberar espacio sin perder tu racha.",
-  "storagePrivate": "Tus grabaciones de voz permanecen en este dispositivo.",
-  "deleteAllRecordings": "Borrar todas las grabaciones",
-  "deleteAllRecordingsTitle": "¿Borrar todas las grabaciones?",
-  "deleteAllRecordingsDescription": "Se borrará todo el audio. Tus momentos, rachas e insignias permanecerán.",
-  "permissions": "Permisos",
-  "permissionLabel": "Acceso al micrófono y las alarmas",
-  "aboutData": "Sobre tus datos",
-  "privacyDescription": "Sin cuenta. Sin cargas. Sin anuncios. Tus oraciones se guardan de forma privada en este dispositivo. Desinstalar la app o perder el dispositivo puede borrar tu historial y tus grabaciones.",
-  "timezoneNote": "Las rachas usan la fecha local al completar un momento. Viajar entre zonas horarias puede saltar o repetir un día. Siempre puedes comenzar de nuevo.",
-  "startFresh": "Empezar de nuevo",
-  "resetTitle": "¿Restablecer Cercano a Dios?",
-  "resetDescription": "Esto borra tu historial, audio, alarmas, rachas e insignias de este dispositivo. No se puede deshacer.",
-  "deleteAppData": "Borrar todos los datos de la app",
-  "footer": "Cercano a Dios · 0.1.0\nUn poco más cerca, cada día.",
-  "badgeFirst": "Primer momento",
-  "badgeStreak3": "Tres días fieles",
-  "badgeStreak7": "Una semana de oración",
-  "badgeStreak30": "Treinta días juntos",
-  "badgeTotal10": "Diez momentos",
-  "badgeTotal50": "Cincuenta momentos",
-  "badgeMilestoneDescription": "Logro alcanzado",
-  "badgeLockedDescription": "Un momento a la vez",
-  "promptTitleP01": "Por este nuevo día",
-  "promptTextP01": "Señor, gracias por este nuevo día. Ayúdame a recibirlo con el corazón abierto.",
-  "promptTitleP02": "Un pequeño regalo",
-  "promptTextP02": "Padre celestial, hoy te doy gracias por ___. Ayúdame a reconocer tus regalos en lo cotidiano.",
-  "promptTitleP03": "Un corazón en paz",
-  "promptTextP03": "Jesús, acompáñame en mis preocupaciones. Enséñame a confiar en ti paso a paso.",
-  "promptTitleP04": "Por quienes amo",
-  "promptTextP04": "Señor, bendice a las personas que amo. Ayúdame a tratarlas con paciencia y bondad.",
-  "promptTitleP05": "Una pausa al anochecer",
-  "promptTextP05": "Padre, gracias por caminar conmigo hoy. Pongo este día en tus manos.",
-  "promptTitleP06": "Volver a empezar",
-  "promptTextP06": "Jesús misericordioso, ayúdame a comenzar de nuevo cuando falle y guíame hacia el bien.",
-  "promptTitleP07": "Un espíritu generoso",
-  "promptTextP07": "Señor, muéstrame a alguien a quien pueda ayudar. Hazme generoso con mi tiempo y atención.",
-  "promptTitleP08": "Por el pan de cada día",
-  "promptTextP08": "Padre, gracias por el alimento y el hogar que tengo. Acerca a mi corazón a quienes pasan necesidad.",
-  "promptTitleP09": "En el silencio",
-  "promptTextP09": "Espíritu Santo, calma el ruido que llevo dentro. Ayúdame a escuchar con un corazón dispuesto.",
-  "promptTitleP10": "Por mi trabajo",
-  "promptTextP10": "Jesús, guía el trabajo de mis manos. Que pueda servir a los demás con honestidad y cuidado.",
-  "promptTitleP11": "Cuando estoy cansado",
-  "promptTextP11": "Señor, te entrego mi cansancio. Ayúdame a descansar y recibir el cuidado que necesito.",
-  "promptTitleP12": "Un recuerdo agradecido",
-  "promptTextP12": "Padre, gracias por un momento de alegría que recuerdo hoy: ___.",
-  "promptTitleP13": "El regalo de la amistad",
-  "promptTextP13": "Señor, gracias por quienes caminan a mi lado. Ayúdame a ser un amigo fiel.",
-  "promptTitleP14": "Por el perdón",
-  "promptTextP14": "Padre misericordioso, dame valor para pedir perdón y gracia para perdonar a los demás.",
-  "promptTitleP15": "Con María",
-  "promptTextP15": "María, Madre de Jesús, ruega por mí mientras busco seguir hoy a tu Hijo.",
-  "promptTitleP16": "Una respuesta paciente",
-  "promptTextP16": "Espíritu Santo, ayúdame a hacer una pausa antes de hablar. Que mis palabras lleven paciencia y verdad.",
-  "promptTitleP17": "Por quienes están solos",
-  "promptTextP17": "Jesús, acércate a quienes se sienten solos. Muéstrame cómo ofrecer compañía.",
-  "promptTitleP18": "Confiar en la incertidumbre",
-  "promptTextP18": "Padre, no sé todo lo que traerá este día. Ayúdame a dar el siguiente paso bueno.",
-  "promptTitleP19": "Por la creación",
-  "promptTextP19": "Señor, gracias por la belleza de tu creación. Enséñame a cuidar nuestra casa común.",
-  "promptTitleP20": "Una sencilla ofrenda",
-  "promptTextP20": "Jesús, te ofrezco este pequeño momento. Ayúdame a crecer en fe, esperanza y amor.",
-  "appOpenError": "No pudimos abrir tu diario de oración.",
-  "tryAgain": "Intentar de nuevo",
-  "soundReminders": "Recordatorios con sonido en este iPhone",
-  "ringingAlarms": "Alarmas con Detener y Posponer",
-  "deviceAccess": "Acceso del dispositivo: {permission}",
-  "listenDuration": "Escuchar · {seconds}s",
-  "deleteAudioKeepMoment": "Borrar audio, conservar momento",
-  "deleteMoment": "Borrar momento",
-  "monday": "Lunes",
-  "tuesday": "Martes",
-  "wednesday": "Miércoles",
-  "thursday": "Jueves",
-  "friday": "Viernes",
-  "saturday": "Sábado",
-  "sunday": "Domingo",
-  "completed": "completado",
-  "notCompleted": "sin completar",
-  "durationSeconds": "{seconds} segundos",
-  "promptCategoryMorning": "Mañana",
-  "promptCategoryGratitude": "Gratitud",
-  "promptCategoryPeace": "Paz",
-  "promptCategoryFamily": "Familia",
-  "promptCategoryHope": "Esperanza",
-  "promptCategoryService": "Servicio",
-  "promptCategoryFaith": "Fe",
-  "microphoneLevel": "Nivel de sonido del micrófono",
-  "promptCategoryEvening": "Noche",
-};
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

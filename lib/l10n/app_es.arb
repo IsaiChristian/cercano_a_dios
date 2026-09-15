@@ -1,6 +1,8 @@
 {
   "@@locale": "es",
   "appName": "Cercano a Dios",
+  "welcomeTitle": "Cercano\na Dios",
+  "welcomeBody": "Haz un poco de espacio para orar.\nDa gracias. Habla desde el corazón.\nRegresa mañana.",
   "onboardingTagline": "Un poco más cerca, cada día",
   "onboardingTitle": "Haz espacio\npara Dios.",
   "onboardingSubtitle": "Un momento de calma. Un corazón agradecido. Un nuevo comienzo.",

@@ -1,6 +1,8 @@
 {
   "@@locale": "en",
   "appName": "Cercano a Dios",
+  "welcomeTitle": "Cercano\na Dios",
+  "welcomeBody": "Make a little space for prayer.\nGive thanks. Speak from the heart.\nReturn tomorrow.",
   "onboardingTagline": "A little closer, every day",
   "onboardingTitle": "Make room\nfor God.",
   "onboardingSubtitle": "A quiet moment. A grateful heart. A new beginning.",

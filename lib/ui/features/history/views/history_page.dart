@@ -30,39 +30,38 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) => BlocBuilder<AppBloc, AppState>(
-        bloc: app,
-        builder: (context, state) {
-          final localizations = AppLocalizations.of(context)!;
-          return PageBody(
-            children: [
-              SectionLabel(localizations.t('journal')),
-              Text(
-                localizations.t('journalTitle'),
-                style: Theme.of(context).textTheme.headlineLarge,
-              ),
-              const SizedBox(height: 16),
-              Text(localizations.t('journalSubtitle')),
-              const SizedBox(height: 24),
-              if (state.sessions.isEmpty)
-                QuietCard(child: Text(localizations.t('firstMomentHint'))),
-              ...state.sessions.take(visible).map(
-                    (session) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _SessionCard(
-                        session: session,
-                        app: app,
-                      ),
-                    ),
-                  ),
-              if (visible < state.sessions.length)
-                TextButton(
-                  onPressed: () => setState(() => visible += 30),
-                  child: Text(localizations.t('loadEarlier')),
+    bloc: app,
+    builder: (context, state) {
+      final localizations = AppLocalizations.of(context)!;
+      return PageBody(
+        children: [
+          SectionLabel(localizations.journal),
+          Text(
+            localizations.journalTitle,
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 16),
+          Text(localizations.journalSubtitle),
+          const SizedBox(height: 24),
+          if (state.sessions.isEmpty)
+            QuietCard(child: Text(localizations.firstMomentHint)),
+          ...state.sessions
+              .take(visible)
+              .map(
+                (session) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _SessionCard(session: session, app: app),
                 ),
-            ],
-          );
-        },
+              ),
+          if (visible < state.sessions.length)
+            TextButton(
+              onPressed: () => setState(() => visible += 30),
+              child: Text(localizations.loadEarlier),
+            ),
+        ],
       );
+    },
+  );
 }
 
 class _SessionCard extends StatelessWidget {
@@ -79,7 +78,7 @@ class _SessionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${session.localDate} · ${session.spoken ? localizations.t('spokenPrayer') : localizations.t('silentReflection')}',
+            '${session.localDate} · ${session.spoken ? localizations.spokenPrayer : localizations.silentReflection}',
             style: const TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 12),
@@ -92,23 +91,21 @@ class _SessionCard extends StatelessWidget {
                   onPressed: () => app.playAudio(session),
                   icon: const Icon(Icons.play_arrow),
                   label: Text(
-                    localizations.t('listenDuration', {
-                      'seconds': session.durationSeconds,
-                    }),
+                    localizations.listenDuration(session.durationSeconds),
                   ),
                 ),
                 IconButton(
-                  tooltip: localizations.t('stopPlayback'),
+                  tooltip: localizations.stopPlayback,
                   onPressed: app.stopPlayback,
                   icon: const Icon(Icons.stop),
                 ),
                 IconButton(
-                  tooltip: localizations.t('deleteAudioKeepMoment'),
+                  tooltip: localizations.deleteAudioKeepMoment,
                   onPressed: () async {
                     if (await confirm(
                       context,
-                      localizations.t('deleteRecordingTitle'),
-                      localizations.t('deleteRecordingDescription'),
+                      localizations.deleteRecordingTitle,
+                      localizations.deleteRecordingDescription,
                     )) {
                       await app.deleteAudio(session.id);
                     }
@@ -121,13 +118,13 @@ class _SessionCard extends StatelessWidget {
             onPressed: () async {
               if (await confirm(
                 context,
-                localizations.t('deleteMomentTitle'),
-                localizations.t('deleteMomentDescription'),
+                localizations.deleteMomentTitle,
+                localizations.deleteMomentDescription,
               )) {
                 await app.deleteSession(session.id);
               }
             },
-            child: Text(localizations.t('deleteMoment')),
+            child: Text(localizations.deleteMoment),
           ),
         ],
       ),
