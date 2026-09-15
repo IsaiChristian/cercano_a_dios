@@ -1,0 +1,503 @@
+import 'dart:async';
+
+import 'package:dartz/dartz.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../data/services/device_services.dart';
+import '../../../../data/services/local_storage_service.dart';
+import '../../../../domain/entities/prayer.dart';
+import '../../../../domain/failures/failure.dart';
+import '../../../../domain/repositories/prayer_repository.dart';
+import '../../../../domain/use_cases/calculate_progress.dart';
+
+class AppState {
+  final List<PrayerSession> sessions;
+  final List<Reminder> reminders;
+  final bool loading;
+  final String? error;
+  final int audioBytes;
+  final bool onboardingComplete;
+
+  AppState({
+    List<PrayerSession> sessions = const [],
+    List<Reminder> reminders = const [],
+    this.loading = false,
+    this.error,
+    this.audioBytes = 0,
+    this.onboardingComplete = false,
+  })  : sessions = List.unmodifiable(sessions),
+        reminders = List.unmodifiable(reminders);
+
+  PrayerProgress progress(DateTime now) => calculateProgress(sessions, now);
+}
+
+abstract class AppEvent {}
+
+class AppRefreshRequested extends AppEvent {
+  final Completer<void>? result;
+
+  AppRefreshRequested([this.result]);
+}
+
+class AppErrorReported extends AppEvent {
+  final Object error;
+
+  AppErrorReported(this.error);
+}
+
+class AppOnboardingCompleted extends AppEvent {
+  final Completer<void>? result;
+
+  AppOnboardingCompleted([this.result]);
+}
+
+class AppPrayerCompleted extends AppEvent {
+  final PrayerSession session;
+  final Completer<bool>? result;
+
+  AppPrayerCompleted(this.session, [this.result]);
+}
+
+class AppSessionDeleted extends AppEvent {
+  final String id;
+  final Completer<void>? result;
+
+  AppSessionDeleted(this.id, [this.result]);
+}
+
+class AppAudioDeleted extends AppEvent {
+  final String id;
+  final Completer<void>? result;
+
+  AppAudioDeleted(this.id, [this.result]);
+}
+
+class AppAllAudioDeleted extends AppEvent {
+  final Completer<void>? result;
+
+  AppAllAudioDeleted([this.result]);
+}
+
+class AppReminderSaved extends AppEvent {
+  final Reminder reminder;
+  final Completer<bool>? result;
+
+  AppReminderSaved(this.reminder, [this.result]);
+}
+
+class AppReminderDeleted extends AppEvent {
+  final int id;
+  final Completer<void>? result;
+
+  AppReminderDeleted(this.id, [this.result]);
+}
+
+class AppReminderSnoozeCancelled extends AppEvent {
+  final int id;
+  final Completer<void>? result;
+
+  AppReminderSnoozeCancelled(this.id, [this.result]);
+}
+
+class AppDataReset extends AppEvent {
+  final Completer<bool>? result;
+
+  AppDataReset([this.result]);
+}
+
+class AppAudioPlaybackRequested extends AppEvent {
+  final PrayerSession session;
+
+  AppAudioPlaybackRequested(this.session);
+}
+
+class AppAudioPlaybackStopped extends AppEvent {}
+
+class AppDeviceSettingsRequested extends AppEvent {}
+
+class AppAlarmTestRequested extends AppEvent {}
+
+/// Application coordinator for journal state and cross-feature commands.
+///
+/// All state changes are driven by [AppEvent]s so feature views only rebuild
+/// from immutable [AppState] snapshots via BlocBuilder.
+class AppBloc extends Bloc<AppEvent, AppState> {
+  final PrayerRepository repository;
+  final DeviceServices device;
+  final LocalStorageService storage;
+  final Future<void> Function()? closeResources;
+
+  AppBloc({
+    required this.repository,
+    required this.device,
+    required this.storage,
+    bool onboardingComplete = false,
+    this.closeResources,
+  }) : super(AppState(
+          loading: true,
+          onboardingComplete: onboardingComplete,
+        )) {
+    on<AppRefreshRequested>(_onRefresh);
+    on<AppErrorReported>(_onErrorReported);
+    on<AppOnboardingCompleted>(_onOnboardingCompleted);
+    on<AppPrayerCompleted>(_onPrayerCompleted);
+    on<AppSessionDeleted>(_onSessionDeleted);
+    on<AppAudioDeleted>(_onAudioDeleted);
+    on<AppAllAudioDeleted>(_onAllAudioDeleted);
+    on<AppReminderSaved>(_onReminderSaved);
+    on<AppReminderDeleted>(_onReminderDeleted);
+    on<AppReminderSnoozeCancelled>(_onReminderSnoozeCancelled);
+    on<AppDataReset>(_onDataReset);
+    on<AppAudioPlaybackRequested>(_onAudioPlaybackRequested);
+    on<AppAudioPlaybackStopped>(_onAudioPlaybackStopped);
+    on<AppDeviceSettingsRequested>(_onDeviceSettingsRequested);
+    on<AppAlarmTestRequested>(_onAlarmTestRequested);
+  }
+
+  String get root => storage.root;
+
+  T unwrap<T>(Either<Failure, T> result) => result.fold(
+        (Failure failure) => throw failure,
+        (value) => value,
+      );
+
+  Future<void> refresh() {
+    final result = Completer<void>();
+    add(AppRefreshRequested(result));
+    return result.future;
+  }
+
+  void report(Object error) => add(AppErrorReported(error));
+
+  Future<void> completeOnboarding() {
+    final result = Completer<void>();
+    add(AppOnboardingCompleted(result));
+    return result.future;
+  }
+
+  Future<bool> complete(PrayerSession session) {
+    final result = Completer<bool>();
+    add(AppPrayerCompleted(session, result));
+    return result.future;
+  }
+
+  Future<void> deleteSession(String id) {
+    final result = Completer<void>();
+    add(AppSessionDeleted(id, result));
+    return result.future;
+  }
+
+  Future<void> deleteAudio(String id) {
+    final result = Completer<void>();
+    add(AppAudioDeleted(id, result));
+    return result.future;
+  }
+
+  Future<void> deleteAllAudio() {
+    final result = Completer<void>();
+    add(AppAllAudioDeleted(result));
+    return result.future;
+  }
+
+  Future<bool> saveReminder(Reminder reminder) {
+    final result = Completer<bool>();
+    add(AppReminderSaved(reminder, result));
+    return result.future;
+  }
+
+  Future<void> deleteReminder(int id) {
+    final result = Completer<void>();
+    add(AppReminderDeleted(id, result));
+    return result.future;
+  }
+
+  Future<void> cancelReminderSnooze(int id) {
+    final result = Completer<void>();
+    add(AppReminderSnoozeCancelled(id, result));
+    return result.future;
+  }
+
+  Future<bool> reset() {
+    final result = Completer<bool>();
+    add(AppDataReset(result));
+    return result.future;
+  }
+
+  Future<void> playAudio(PrayerSession session) {
+    add(AppAudioPlaybackRequested(session));
+    return Future<void>.value();
+  }
+
+  Future<void> stopPlayback() {
+    add(AppAudioPlaybackStopped());
+    return Future<void>.value();
+  }
+
+  Future<void> openDeviceSettings() {
+    add(AppDeviceSettingsRequested());
+    return Future<void>.value();
+  }
+
+  Future<void> testAlarm() {
+    add(AppAlarmTestRequested());
+    return Future<void>.value();
+  }
+
+  Future<void> _onRefresh(
+    AppRefreshRequested event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      final sessions = unwrap(await repository.sessions());
+      final reminders = unwrap(await repository.reminders());
+      final bytes = await storage.audioBytes();
+      emit(AppState(
+        sessions: sessions,
+        reminders: reminders,
+        audioBytes: bytes,
+        onboardingComplete: state.onboardingComplete,
+      ));
+      event.result?.complete();
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.complete();
+    }
+  }
+
+  void _onErrorReported(AppErrorReported event, Emitter<AppState> emit) {
+    _emitError(emit, event.error);
+  }
+
+  Future<void> _onOnboardingCompleted(
+    AppOnboardingCompleted event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await storage.completeOnboarding();
+      emit(AppState(
+        sessions: state.sessions,
+        reminders: state.reminders,
+        audioBytes: state.audioBytes,
+        onboardingComplete: true,
+      ));
+      event.result?.complete();
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.completeError(error);
+    }
+  }
+
+  Future<void> _onPrayerCompleted(
+    AppPrayerCompleted event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      unwrap(await repository.complete(event.session));
+      await _refreshState(emit);
+      event.result?.complete(true);
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.complete(false);
+    }
+  }
+
+  Future<void> _onSessionDeleted(
+    AppSessionDeleted event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      unwrap(await repository.deleteSession(event.id));
+      await _refreshState(emit);
+      event.result?.complete();
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.complete();
+    }
+  }
+
+  Future<void> _onAudioDeleted(
+    AppAudioDeleted event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await device.stopPlayback();
+      unwrap(await repository.deleteAudio(event.id));
+      await _refreshState(emit);
+      event.result?.complete();
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.complete();
+    }
+  }
+
+  Future<void> _onAllAudioDeleted(
+    AppAllAudioDeleted event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await device.stopPlayback();
+      for (final session in state.sessions) {
+        unwrap(await repository.deleteAudio(session.id));
+      }
+      await _refreshState(emit);
+      event.result?.complete();
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.complete();
+    }
+  }
+
+  Future<void> _onReminderSaved(
+    AppReminderSaved event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      unwrap(await repository.saveReminder(
+        event.reminder.copyWith(status: 'pending'),
+      ));
+      await device.cancel(event.reminder.id);
+      if (event.reminder.enabled) await device.schedule(event.reminder);
+      unwrap(await repository.saveReminder(
+        event.reminder.copyWith(
+          status: event.reminder.enabled ? 'ready' : 'paused',
+        ),
+      ));
+      await _refreshState(emit);
+      event.result?.complete(true);
+    } catch (error) {
+      try {
+        await _refreshState(emit);
+      } catch (_) {
+        // Preserve the original actionable error below.
+      }
+      _emitError(emit, error);
+      event.result?.complete(false);
+    }
+  }
+
+  Future<void> _onReminderDeleted(
+    AppReminderDeleted event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await device.cancel(event.id);
+      unwrap(await repository.deleteReminder(event.id));
+      await _refreshState(emit);
+      event.result?.complete();
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.complete();
+    }
+  }
+
+  Future<void> _onReminderSnoozeCancelled(
+    AppReminderSnoozeCancelled event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await device.cancelSnooze(event.id);
+      event.result?.complete();
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.completeError(error);
+    }
+  }
+
+  Future<void> _onDataReset(
+    AppDataReset event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await device.stopPlayback();
+      await device.cancelAll();
+      unwrap(await repository.reset());
+      await _refreshState(emit, onboardingComplete: false);
+      event.result?.complete(true);
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.complete(false);
+    }
+  }
+
+  Future<void> _onAudioPlaybackRequested(
+    AppAudioPlaybackRequested event,
+    Emitter<AppState> emit,
+  ) async {
+    if (event.session.audioPath == null) return;
+    try {
+      await device.play(storage.pathFor(event.session.audioPath!));
+    } catch (error) {
+      _emitError(emit, error);
+    }
+  }
+
+  Future<void> _onAudioPlaybackStopped(
+    AppAudioPlaybackStopped event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await device.stopPlayback();
+    } catch (error) {
+      _emitError(emit, error);
+    }
+  }
+
+  Future<void> _onDeviceSettingsRequested(
+    AppDeviceSettingsRequested event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await device.settings();
+    } catch (error) {
+      _emitError(emit, error);
+    }
+  }
+
+  Future<void> _onAlarmTestRequested(
+    AppAlarmTestRequested event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await device.testAlarm();
+    } catch (error) {
+      _emitError(emit, error);
+    }
+  }
+
+  Future<void> _refreshState(
+    Emitter<AppState> emit, {
+    bool? onboardingComplete,
+  }) async {
+    final sessions = unwrap(await repository.sessions());
+    final reminders = unwrap(await repository.reminders());
+    final bytes = await storage.audioBytes();
+    emit(AppState(
+      sessions: sessions,
+      reminders: reminders,
+      audioBytes: bytes,
+      onboardingComplete: onboardingComplete ?? state.onboardingComplete,
+    ));
+  }
+
+  void _emitError(Emitter<AppState> emit, Object error) {
+    final message = error is Failure
+        ? error.message
+        : error is PlatformException
+            ? error.message ?? 'Check your device settings and try again.'
+            : 'Something went wrong. Please try again.';
+    emit(AppState(
+      sessions: state.sessions,
+      reminders: state.reminders,
+      audioBytes: state.audioBytes,
+      error: message,
+      onboardingComplete: state.onboardingComplete,
+    ));
+  }
+
+  @override
+  Future<void> close() async {
+    await super.close();
+    await closeResources?.call();
+  }
+}
