@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import '../../domain/entities/prayer.dart';
+import '../mappers/reminder_mapper.dart';
 
 /// Adapter for platform capabilities used by the application.
 ///
@@ -47,7 +48,8 @@ class DeviceServices {
   Future<double> amplitude() async =>
       await channel.invokeMethod<double>('amplitude') ?? 0;
 
-  Future<void> play(String path) => channel.invokeMethod('play', {'path': path});
+  Future<void> play(String path) =>
+      channel.invokeMethod('play', {'path': path});
 
   Future<void> stopPlayback() => channel.invokeMethod('stopPlayback');
 }

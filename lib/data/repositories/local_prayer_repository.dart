@@ -1,8 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:sqflite/sqflite.dart';
-import '../../core/error/failure.dart';
+import '../../core/services/local_safe_call.dart';
 import '../../domain/entities/prayer.dart';
+import '../../domain/failures/failure.dart';
 import '../../domain/repositories/prayer_repository.dart';
+import '../mappers/reminder_mapper.dart';
 import '../models/session_mapper.dart';
 import '../services/local_prayer_database_service.dart';
 
@@ -11,7 +13,7 @@ class LocalPrayerRepository implements PrayerRepository {
 
   /// Compatibility constructor for existing database tests and callers.
   LocalPrayerRepository(Database db, String root)
-      : _service = LocalPrayerDatabaseService(db, root);
+    : _service = LocalPrayerDatabaseService(db, root);
 
   LocalPrayerRepository.fromService(this._service);
 
@@ -28,16 +30,22 @@ class LocalPrayerRepository implements PrayerRepository {
       LocalPrayerDatabaseService.createSchema(db, version);
 
   @override
-  Future<Either<Failure, List<PrayerSession>>> sessions() => safeLocalCall(() async =>
-    (await _service.sessions()).map(sessionFromRow).toList());
+  Future<Either<Failure, List<PrayerSession>>> sessions() =>
+      safeLocalCall(() async {
+        final rows = await _service.sessions();
+        return rows.map(sessionFromRow).toList();
+      });
 
   @override
-  Future<Either<Failure, void>> complete(PrayerSession session) => safeLocalCall(() async {
-    if (session.audioPath != null && !await _service.audioExists(session.audioPath!)) {
-      throw StateError('Recording missing');
-    }
-    await _service.insertSession(sessionToRow(session));
-  });
+  Future<Either<Failure, void>> complete(PrayerSession session) =>
+      safeLocalCall(() async {
+        if (session.audioPath != null &&
+            !await _service.audioExists(session.audioPath!)) {
+          throw StateError('Recording missing');
+        }
+        final row = sessionToRow(session);
+        await _service.insertSession(row);
+      });
 
   Future<void> _removeAudio(String id) async {
     final row = await _service.session(id);
@@ -50,32 +58,37 @@ class LocalPrayerRepository implements PrayerRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteAudio(String id) => safeLocalCall(() => _removeAudio(id));
+  Future<Either<Failure, void>> deleteAudio(String id) =>
+      safeLocalCall(() async {
+        await _removeAudio(id);
+      });
 
   @override
-  Future<Either<Failure, void>> deleteSession(String id) => safeLocalCall(() async {
-    await _removeAudio(id);
-    await _service.deleteSession(id);
-  });
+  Future<Either<Failure, void>> deleteSession(String id) =>
+      safeLocalCall(() async {
+        await _removeAudio(id);
+        await _service.deleteSession(id);
+      });
 
   @override
-  Future<Either<Failure, List<Reminder>>> reminders() => safeLocalCall(() async =>
-    (await _service.reminders()).map((r) => Reminder(
-      id: r['id'] as int, hour: r['hour'] as int, minute: r['minute'] as int,
-      weekdays: (r['weekdays'] as String).split(',').map(int.parse).toList(),
-      enabled: r['enabled'] == 1, status: r['status'] as String)).toList());
+  Future<Either<Failure, List<Reminder>>> reminders() =>
+      safeLocalCall(() async {
+        final rows = await _service.reminders();
+        return rows.map(reminderFromRow).toList();
+      });
 
   @override
-  Future<Either<Failure, void>> saveReminder(Reminder r) => safeLocalCall(() async {
-    await _service.upsertReminder({'id': r.id, 'hour': r.hour, 'minute': r.minute,
-      'weekdays': r.weekdays.join(','), 'enabled': r.enabled ? 1 : 0,
-      'status': r.status});
-  });
+  Future<Either<Failure, void>> saveReminder(Reminder reminder) =>
+      safeLocalCall(() async {
+        final row = reminder.toRow();
+        await _service.upsertReminder(row);
+      });
 
   @override
-  Future<Either<Failure, void>> deleteReminder(int id) => safeLocalCall(() async {
-    await _service.deleteReminder(id);
-  });
+  Future<Either<Failure, void>> deleteReminder(int id) =>
+      safeLocalCall(() async {
+        await _service.deleteReminder(id);
+      });
 
   @override
   Future<Either<Failure, void>> reset() => safeLocalCall(() async {
