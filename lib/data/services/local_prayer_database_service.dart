@@ -47,11 +47,7 @@ class LocalPrayerDatabaseService {
   }
 
   Future<Map<String, Object?>?> session(String id) async {
-    final rows = await db.query(
-      'sessions',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final rows = await db.query('sessions', where: 'id = ?', whereArgs: [id]);
     return rows.isEmpty ? null : rows.first;
   }
 
@@ -65,11 +61,7 @@ class LocalPrayerDatabaseService {
   }
 
   Future<void> deleteSession(String id) async {
-    await db.delete(
-      'sessions',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('sessions', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Map<String, Object?>>> reminders() =>
@@ -84,11 +76,7 @@ class LocalPrayerDatabaseService {
   }
 
   Future<void> deleteReminder(int id) async {
-    await db.delete(
-      'reminders',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('reminders', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> reset() async {

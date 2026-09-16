@@ -10,8 +10,7 @@ class LocalStorageService {
 
   String pathFor(String filename) => p.join(root, filename);
 
-  Future<bool> hasCompletedOnboarding() =>
-      File(pathFor('welcomed')).exists();
+  Future<bool> hasCompletedOnboarding() => File(pathFor('welcomed')).exists();
 
   Future<void> completeOnboarding() async {
     await File(pathFor('welcomed')).writeAsString('1');

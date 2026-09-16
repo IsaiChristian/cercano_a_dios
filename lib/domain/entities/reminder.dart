@@ -23,12 +23,4 @@ class Reminder {
     enabled: enabled ?? this.enabled,
     status: status ?? this.status,
   );
-
-  Map<String, Object?> toPlatform() => {
-    'id': id,
-    'hour': hour,
-    'minute': minute,
-    'weekdays': weekdays,
-    'enabled': enabled,
-  };
 }
