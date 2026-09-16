@@ -8,229 +8,54 @@ Optimize for:
 3. Small, independently verifiable changes
 4. Minimal duplicated context between agents
 
-Use the cheapest capable worker for each task.
-Escalate upward only when complexity or uncertainty requires it.
+## Long-context reading — Luna max
 
----
+Use GPT-5.6 Luna (`gpt-5.6-luna`) with `max` reasoning for long-context
+reading, repository exploration, and synthesis of large documents or logs.
+Return concise findings with file references, relevant contracts, constraints,
+uncertainties, and acceptance criteria for the implementation worker.
 
-## Tier 0 — Root Orchestrator: Astra (GPT-6 Astra)
+Keep this role read-only. Do not have the implementation worker repeat broad
+context collection; it should inspect the specific source needed to verify the
+handoff and make the change.
 
-### Role
-Architect, escalation target, and final reviewer for high-impact changes.
+## Implementation — Astra low
 
-### Use Astra for
-- Architecture and cross-feature design decisions.
-- Public/domain interface contracts.
-- Ambiguous requirements.
-- Difficult debugging after lower-tier attempts fail.
-- Security-sensitive or data-integrity-sensitive changes.
-- Reviewing changes that affect multiple architectural layers.
-- Resolving conflicts between worker implementations.
+Use GPT-6 Astra (`gpt-6-astra`) with `low` reasoning for implementation.
+“Light” means the supported `low` effort setting.
 
-### Do NOT use Astra for
-- Boilerplate.
-- DTO generation.
-- Simple widgets.
-- Routine tests.
-- Formatting.
-- Mechanical refactors.
-- Dependency bumps.
-- Straightforward implementations with established patterns.
+This default applies to all implementation work, including simple edits, tests,
+business logic, architecture changes, debugging, and mechanical changes.
+Keep work narrowly scoped and verify each change with the cheapest appropriate
+checks. The coordinator may make small coordination edits directly.
 
-### Verification
-Astra does not need to review every generated line.
+Terra, Gemini Flash, and Jules are no longer automatic implementation routes.
+Use a different model or service only when the user explicitly requests it.
 
-Require Astra review when:
-- Domain contracts changed.
-- Architecture changed.
-- Multiple features/layers are affected.
-- A worker reports uncertainty.
-- Tests fail after implementation.
+## Routing and escalation
 
-Otherwise automated verification is sufficient.
+1. When substantial context must be read, assign that read-only work to Luna max.
+2. Give Astra low the resulting concise handoff, relevant files, and acceptance
+   criteria. For tasks with enough context already available, start directly
+   with Astra low.
+3. Implement and run the relevant verification.
+4. Only after **two failed Astra low implementation attempts on the same task**
+   may reasoning effort be increased. Record each attempt, its change or approach,
+   and the concrete failure before escalating.
+5. Increase effort only as needed, starting with the next suitable supported
+   level, and carry forward the findings rather than restarting investigation.
 
----
+Task size, long context, architectural impact, or uncertainty alone do not
+permit increasing implementation effort before two failed low-effort attempts.
+Missing permissions, unavailable tools, and unanswered requirements are blockers,
+not failed implementation attempts; surface them to the coordinator.
 
-## Tier 1 — Domain Worker: Terra (GPT-5.6 Terra)
+## Review
 
-### Role
-Primary implementation model for non-trivial application logic.
-
-### Use Terra for
-- Business logic.
-- Use cases.
-- Repository implementations.
-- Caching strategies.
-- State machines.
-- BLoC/Cubit/Riverpod controllers.
-- API/domain mapping involving business rules.
-- Medium-complexity debugging.
-
-### Escalation
-
-Escalate to Astra only when:
-- Architectural decisions are required.
-- Existing contracts appear incorrect.
-- Requirements are ambiguous.
-- Two implementation attempts fail.
-- The change crosses multiple bounded contexts/features.
-
-Do not escalate merely for code review.
-
----
-
-## Tier 2 — Fast Worker: Gemini Flash
-
-### Role
-Cheap, high-throughput implementation worker.
-
-### Use Flash for
-- DTOs.
-- JSON serialization.
-- `fromJson` / `toJson`.
-- `copyWith`.
-- Entity/model mappers.
-- Dart sealed event/state declarations.
-- Simple immutable classes.
-- Repetitive Flutter widgets.
-- UI scaffolding.
-- Form fields.
-- Straightforward extensions/helpers.
-- Test fixtures and mocks.
-- Documentation.
-- Mechanical code transformations.
-
-### Constraints
-
-Flash must receive narrowly scoped tasks.
-
-Provide:
-- Relevant interfaces.
-- Existing project conventions.
-- Target file(s).
-- Expected output.
-- Constraints.
-
-Avoid sending the entire repository context.
-
-Flash must not independently change:
-- Domain contracts.
-- Architecture.
-- Public APIs.
-- Dependency strategy.
-
-If such a change appears necessary, return the problem to the orchestrator.
-
----
-
-## Tier 3 — Async Worker: Google Jules
-
-### Role
-Long-running autonomous repository worker.
-
-### Use Jules when work is:
-- Large.
-- Mechanical.
-- Test-heavy.
-- Repository-wide.
-- Independent from current interactive development.
-- Suitable for execution on an isolated branch.
-
-Examples:
-- Generate test suites.
-- Increase coverage.
-- Repository-wide migrations.
-- Dependency upgrades.
-- Fix CI failures.
-- Large mechanical refactors.
-- Analyze and fix lint violations.
-- Update deprecated Flutter APIs.
-
-### Workflow
-
-1. Create an isolated Jules task.
-2. Jules works on its own branch.
-3. Jules runs:
-
-   flutter pub get
-   dart format .
-   dart analyze
-   flutter test
-
-4. Jules produces a commit/PR.
-5. CI validates the result.
-6. Astra reviews only when the change meets Astra-review criteria.
-
----
-
-# Routing Algorithm
-
-Before implementing a task, classify it.
-
-## Step 1 — Can Flash do it safely?
-
-If the task is:
-- deterministic,
-- repetitive,
-- local,
-- pattern-based,
-- and does not require architectural reasoning,
-
-delegate to Gemini Flash.
-
-Otherwise continue.
-
-## Step 2 — Is it long-running and isolated?
-
-If the task:
-- touches many files,
-- requires extensive tests,
-- is mechanical,
-- or can run independently,
-
-delegate to Jules.
-
-Otherwise continue.
-
-## Step 3 — Does it require application reasoning?
-
-Use Terra.
-
-Examples:
-- business logic,
-- state management,
-- repositories,
-- non-trivial feature implementation.
-
-## Step 4 — Does it require architectural reasoning?
-
-Use Astra only if:
-- contracts must change,
-- architecture must change,
-- requirements are ambiguous,
-- lower-tier agents cannot resolve the problem,
-- or the change has high architectural impact.
-
----
-
-# Escalation Policy
-
-Flash
-  ↓ if insufficient
-Terra
-  ↓ if insufficient
-Astra
-
-Jules
-  ↓ if implementation/logic issue
-Terra
-  ↓ if architectural issue
-Astra
-
-Never escalate directly because a task is large.
-Large but mechanical work belongs to Jules.
-
-Never use Astra simply because it is available.
+Require focused Astra review when domain contracts or architecture change,
+multiple features/layers are affected, a worker reports uncertainty, or tests
+still fail after implementation. Review follows the same low-effort default
+and escalation threshold. Otherwise automated verification is sufficient.
 
 ---
 
@@ -289,7 +114,7 @@ Use the existing [`agent-comms/`](agent-comms/README.md) folder as the shared me
 
 - Follow the existing escalation policy. Hand off when the task exceeds your assigned scope or capability, when a contract or architecture decision is needed, or after two unsuccessful implementation attempts. Do not escalate solely because the task is large.
 - Use [`HANDOFF_TEMPLATE.md`](agent-comms/HANDOFF_TEMPLATE.md) in your task note. Include the objective, acceptance criteria, owner and write scope, starting/current commit, files changed, completed work, exact attempts and results, verification, unresolved questions, and the first concrete next step.
-- State the required decision or expertise and the intended recipient: Flash to Terra; Terra to Astra for architectural issues; Jules to Terra for implementation issues or Astra for architectural issues. If a named worker is unavailable, notify the coordinator rather than silently choosing an expensive replacement.
+- State the required decision or expertise and intended recipient. Use Luna max for additional long-context reading and Astra low for implementation; increase Astra effort only after two documented failed low-effort attempts on the same task. If a named worker is unavailable, notify the coordinator rather than silently selecting a replacement.
 - Preserve useful partial work and identify whether it is tested and safe to continue. Do not discard another agent's changes, hide failures, or mark unfinished work complete.
 - Notify the coordinator or receiving agent through the available communication channel and link the handoff note. A saved note alone does not dispatch another agent. If dispatch is unavailable, explicitly report that the handoff is awaiting assignment.
 - Stop changes that depend on the unresolved decision; continue only independent work within your owned scope. Transfer file ownership explicitly before another agent resumes edits.

@@ -20,5 +20,25 @@ class AppState {
   }) : sessions = List.unmodifiable(sessions),
        reminders = List.unmodifiable(reminders);
 
+  AppState copyWith({
+    Locale? locale,
+    List<PrayerSession>? sessions,
+    List<Reminder>? reminders,
+    bool? loading,
+    String? error,
+    int? audioBytes,
+    bool? onboardingComplete,
+  }) {
+    return AppState(
+      locale: locale ?? this.locale,
+      sessions: sessions ?? this.sessions,
+      reminders: reminders ?? this.reminders,
+      loading: loading ?? this.loading,
+      error: error ?? this.error,
+      audioBytes: audioBytes ?? this.audioBytes,
+      onboardingComplete: onboardingComplete ?? this.onboardingComplete,
+    );
+  }
+
   PrayerProgress progress(DateTime now) => calculateProgress(sessions, now);
 }

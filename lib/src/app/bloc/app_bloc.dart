@@ -148,12 +148,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final reminders = unwrap(await repository.reminders());
       final bytes = await storage.audioBytes();
       emit(
-        AppState(
-          locale: state.locale,
+        state.copyWith(
           sessions: sessions,
           reminders: reminders,
           audioBytes: bytes,
-          onboardingComplete: state.onboardingComplete,
+          loading: false,
         ),
       );
       event.result?.complete();
@@ -165,12 +164,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   void _onLocaleChanged(AppLocaleChanged event, Emitter<AppState> emit) {
     emit(
-      AppState(
+      state.copyWith(
         locale: event.locale,
-        sessions: state.sessions,
-        reminders: state.reminders,
-        audioBytes: state.audioBytes,
-        onboardingComplete: state.onboardingComplete,
+        loading: false,
       ),
     );
   }
@@ -186,12 +182,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     try {
       await storage.completeOnboarding();
       emit(
-        AppState(
-          locale: state.locale,
-          sessions: state.sessions,
-          reminders: state.reminders,
-          audioBytes: state.audioBytes,
+        state.copyWith(
           onboardingComplete: true,
+          loading: false,
         ),
       );
       event.result?.complete();
@@ -207,12 +200,18 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     try {
       unwrap(await repository.complete(event.session));
-      await _refreshState(emit);
-      event.result?.complete(true);
     } catch (error) {
       _emitError(emit, error);
       event.result?.complete(false);
+      return;
     }
+    try {
+      await _refreshState(emit);
+    } catch (error) {
+      _emitError(emit, error);
+    }
+    // A refresh failure cannot undo the committed session or its audio.
+    event.result?.complete(true);
   }
 
   Future<void> _onSessionDeleted(
@@ -387,12 +386,12 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     final reminders = unwrap(await repository.reminders());
     final bytes = await storage.audioBytes();
     emit(
-      AppState(
-        locale: state.locale,
+      state.copyWith(
         sessions: sessions,
         reminders: reminders,
         audioBytes: bytes,
-        onboardingComplete: onboardingComplete ?? state.onboardingComplete,
+        onboardingComplete: onboardingComplete,
+        loading: false,
       ),
     );
   }
@@ -404,13 +403,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         ? error.message ?? 'Check your device settings and try again.'
         : 'Something went wrong. Please try again.';
     emit(
-      AppState(
-        locale: state.locale,
-        sessions: state.sessions,
-        reminders: state.reminders,
-        audioBytes: state.audioBytes,
+      state.copyWith(
         error: message,
-        onboardingComplete: state.onboardingComplete,
+        loading: false,
       ),
     );
   }

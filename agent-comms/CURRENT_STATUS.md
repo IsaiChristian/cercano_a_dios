@@ -1,6 +1,17 @@
 # Current Agent Status
 
-Status: available
+Status: DELEGATION-POLICY complete locally; ownership released.
+Policy: Luna max reads long context; Astra low implements. Higher effort is
+allowed after two documented failed low-effort attempts on the same task.
+Details: [`DELEGATION-POLICY.md`](DELEGATION-POLICY.md).
+
+FIX-COMMITTED-AUDIO complete locally; ownership released.
+Base: main at `3aa07c7`; not committed or pushed. Astra low implemented the fix;
+root reviewed persistence and cleanup lifecycle. Successful persistence survives
+refresh failure; cleanup awaits pending saves and protects committed audio.
+Verification: 10 session tests passed; Flutter analysis, format, and diff checks
+passed. Details: [`FIX-COMMITTED-AUDIO.md`](FIX-COMMITTED-AUDIO.md).
+Next: review/commit local changes when requested; preserve the separate policy edits.
 
 Completed: FIX-HOME-TEST and T05 integration. The home layout test now uses a
 repository stub instead of FFI SQLite/temp-directory setup and verifies the CTA

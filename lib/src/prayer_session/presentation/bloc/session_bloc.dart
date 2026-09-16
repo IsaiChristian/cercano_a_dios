@@ -32,6 +32,9 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   bool _hasRecording = false;
   bool _leaving = false;
   bool _closing = false;
+  bool _audioCommitted = false;
+  Completer<void>? _pendingSave;
+  Future<void>? _closeFuture;
 
   SessionBloc({
     required this.device,
@@ -254,12 +257,15 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     SessionSaveRequested event,
     Emitter<SessionState> emit,
   ) async {
-    if (state.phase != SessionPhase.ready &&
-        state.phase != SessionPhase.review) {
+    if (_closing ||
+        (state.phase != SessionPhase.ready &&
+            state.phase != SessionPhase.review)) {
       event.result.complete(false);
       return;
     }
     final seconds = state.seconds;
+    final pendingSave = Completer<void>();
+    _pendingSave = pendingSave;
     emit(SessionState(SessionPhase.saving, seconds: seconds));
     try {
       await device.stopPlayback();
@@ -277,6 +283,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
       );
       final ok = await completeSession(session);
       if (ok) {
+        _audioCommitted = session.audioPath != null;
         if (reminderId != null && cancelReminderSnooze != null) {
           try {
             await cancelReminderSnooze!(reminderId!);
@@ -311,6 +318,9 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
         ),
       );
       event.result.complete(false);
+    } finally {
+      pendingSave.complete();
+      _pendingSave = null;
     }
   }
 
@@ -327,21 +337,22 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   }
 
   @override
-  Future<void> close() async {
-    if (_closing) return super.close();
+  Future<void> close() => _closeFuture ??= _close().then((_) => super.close());
+
+  Future<void> _close() async {
     _closing = true;
     _leaving = true;
     _timer?.cancel();
     _watch.stop();
     await _interruptions?.cancel();
+    // Let persistence settle before deciding whether this file is a draft.
+    await _pendingSave?.future;
     try {
       await device.finishRecording();
       await device.stopPlayback();
-      if (state.phase != SessionPhase.complete &&
-          await storage.fileExists(filename)) {
+      if (!_audioCommitted && await storage.fileExists(filename)) {
         await storage.deleteFile(filename);
       }
     } catch (_) {}
-    return super.close();
   }
 }

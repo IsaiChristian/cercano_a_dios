@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart';
@@ -14,16 +15,22 @@ import 'package:cercano_a_dios/src/prayer_session/presentation/bloc/session_bloc
 class MemoryRepository implements PrayerRepository {
   final records = <String, PrayerSession>{};
   bool failSave = false;
+  bool failRead = false;
+  Completer<void>? saveStarted;
+  Completer<void>? allowSave;
   @override
   Future<Either<Failure, void>> complete(PrayerSession session) async {
+    saveStarted?.complete();
+    await allowSave?.future;
     if (failSave) return const Left(Failure('Storage unavailable'));
     records.putIfAbsent(session.id, () => session);
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, List<PrayerSession>>> sessions() async =>
-      Right(records.values.toList());
+  Future<Either<Failure, List<PrayerSession>>> sessions() async => failRead
+      ? const Left(Failure('Refresh unavailable'))
+      : Right(records.values.toList());
   @override
   Future<Either<Failure, List<Reminder>>> reminders() async => const Right([]);
   @override
@@ -135,6 +142,61 @@ void main() {
     expect(session.state.error, 'Microphone denied');
     expect(await session.save(silent: true), true);
     expect(repository.records.values.single.spoken, false);
+  });
+  test('committed audio survives a failed refresh and closing', () async {
+    await session.start();
+    await session.finish();
+    repository.failRead = true;
+
+    expect(await session.save(), true);
+    expect(app.state.error, 'Refresh unavailable');
+    expect(session.state.phase, SessionPhase.complete);
+    expect(repository.records.values.single.audioPath, session.filename);
+    expect(await session.save(), false);
+    await session.close();
+    expect(await File(session.path).exists(), true);
+    expect(repository.records.length, 1);
+  });
+  for (final failSave in [false, true]) {
+    test('close waits for pending save (failure: $failSave)', () async {
+      await session.start();
+      await session.finish();
+      repository.failSave = failSave;
+      repository.failRead = !failSave;
+      repository.saveStarted = Completer<void>();
+      repository.allowSave = Completer<void>();
+
+      final saving = session.save();
+      await repository.saveStarted!.future;
+      var closed = false;
+      final closing = session.close().then((_) => closed = true);
+      expect(await File(session.path).exists(), true);
+      expect(closed, false);
+      repository.allowSave!.complete();
+
+      expect(await saving, !failSave);
+      await closing;
+      expect(await File(session.path).exists(), !failSave);
+      expect(repository.records.length, failSave ? 0 : 1);
+    });
+  }
+  test('closing before a queued save starts discards the draft', () async {
+    await session.start();
+    await session.finish();
+    final saving = session.save();
+    final closing = session.close();
+    expect(await saving, false);
+    await closing;
+    expect(repository.records, isEmpty);
+    expect(await File(session.path).exists(), false);
+  });
+  test('silent completion removes the unused recording', () async {
+    await session.start();
+    await session.finish();
+    expect(await session.save(silent: true), true);
+    expect(repository.records.values.single.audioPath, isNull);
+    await session.close();
+    expect(await File(session.path).exists(), false);
   });
   test(
     'failed save keeps the draft and can be retried without duplicate credit',
