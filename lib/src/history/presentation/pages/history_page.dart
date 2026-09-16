@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../domain/entities/prayer.dart';
@@ -36,32 +37,79 @@ class _HistoryPageState extends State<HistoryPage> {
     bloc: app,
     builder: (context, state) {
       final localizations = AppLocalizations.of(context)!;
-      return PageBody(
-        children: [
-          SectionLabel(localizations.journal),
-          Text(
-            localizations.journalTitle,
-            style: Theme.of(context).textTheme.headlineLarge,
+      final currentPath = GoRouter.of(context).routeInformationProvider.value.uri.path;
+
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            localizations.appName,
+            style: const TextStyle(fontFamily: 'serif'),
           ),
-          const SizedBox(height: 16),
-          Text(localizations.journalSubtitle),
-          const SizedBox(height: 24),
-          if (state.sessions.isEmpty)
-            QuietCard(child: Text(localizations.firstMomentHint)),
-          ...state.sessions
-              .take(visible)
-              .map(
-                (session) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _SessionCard(session: session, app: app),
-                ),
-              ),
-          if (visible < state.sessions.length)
-            TextButton(
-              onPressed: () => setState(() => visible += 30),
-              child: Text(localizations.loadEarlier),
+          actions: [
+            IconButton(
+              tooltip: localizations.milestones,
+              onPressed: () => context.push('/progress'),
+              icon: const Icon(Icons.auto_awesome_outlined),
             ),
-        ],
+          ],
+        ),
+        body: SafeArea(
+          child: PageBody(
+            children: [
+              SectionLabel(localizations.journal),
+              Text(
+                localizations.journalTitle,
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+              const SizedBox(height: 16),
+              Text(localizations.journalSubtitle),
+              const SizedBox(height: 24),
+              if (state.sessions.isEmpty)
+                QuietCard(child: Text(localizations.firstMomentHint)),
+              ...state.sessions
+                  .take(visible)
+                  .map(
+                    (session) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _SessionCard(session: session, app: app),
+                    ),
+                  ),
+              if (visible < state.sessions.length)
+                TextButton(
+                  onPressed: () => setState(() => visible += 30),
+                  child: Text(localizations.loadEarlier),
+                ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: switch (currentPath) {
+            '/reminders' => 1,
+            '/history' => 2,
+            '/settings' => 3,
+            _ => 0,
+          },
+          onDestinationSelected: (index) =>
+              context.go(['/', '/reminders', '/history', '/settings'][index]),
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.wb_sunny_outlined),
+              label: localizations.today,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.alarm),
+              label: localizations.alarms,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.menu_book_outlined),
+              label: localizations.journal,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.tune),
+              label: localizations.settings,
+            ),
+          ],
+        ),
       );
     },
   );

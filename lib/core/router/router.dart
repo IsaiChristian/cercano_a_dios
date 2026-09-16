@@ -57,75 +57,24 @@ GoRouter createRouter(AppBloc app) => GoRouter(
         );
       },
     ),
-    ShellRoute(
-      builder: (context, state, child) {
-        final localizations = AppLocalizations.of(context)!;
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              localizations.appName,
-              style: const TextStyle(fontFamily: 'serif'),
-            ),
-            actions: [
-              IconButton(
-                tooltip: localizations.milestones,
-                onPressed: () => context.push('/progress'),
-                icon: const Icon(Icons.auto_awesome_outlined),
-              ),
-            ],
-          ),
-          body: SafeArea(child: child),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: switch (state.uri.path) {
-              '/reminders' => 1,
-              '/history' => 2,
-              '/settings' => 3,
-              _ => 0,
-            },
-            onDestinationSelected: (index) =>
-                context.go(['/', '/reminders', '/history', '/settings'][index]),
-            destinations: [
-              NavigationDestination(
-                icon: const Icon(Icons.wb_sunny_outlined),
-                label: localizations.today,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.alarm),
-                label: localizations.alarms,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.menu_book_outlined),
-                label: localizations.journal,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.tune),
-                label: localizations.settings,
-              ),
-            ],
-          ),
-        );
-      },
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, state) => HomePage(app: app),
-        ),
-        GoRoute(
-          path: '/reminders',
-          builder: (_, state) => BlocProvider(
-            create: (_) => RemindersBloc(app: app, device: app.device),
-            child: const RemindersPage(),
-          ),
-        ),
-        GoRoute(
-          path: '/history',
-          builder: (_, state) => HistoryPage(app: app),
-        ),
-        GoRoute(
-          path: '/settings',
-          builder: (_, state) => SettingsPage(app: app),
-        ),
-      ],
+    GoRoute(
+      path: '/',
+      builder: (context, state) => HomePage(app: app),
+    ),
+    GoRoute(
+      path: '/reminders',
+      builder: (context, state) => BlocProvider(
+        create: (_) => RemindersBloc(app: app, device: app.device),
+        child: const RemindersPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => HistoryPage(app: app),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => SettingsPage(app: app),
     ),
     GoRoute(
       path: '/prayer/:id',

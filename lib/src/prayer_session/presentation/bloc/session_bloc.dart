@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../data/services/device_services.dart';
+import '../../../../data/services/device_services.dart';    
 import '../../../../data/services/local_storage_service.dart';
 import '../../../../domain/entities/prayer.dart';
 

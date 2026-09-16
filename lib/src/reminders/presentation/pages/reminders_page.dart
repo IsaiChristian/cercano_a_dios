@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../domain/entities/prayer.dart';
 import '../../../../domain/use_cases/next_reminder.dart';
@@ -133,125 +134,175 @@ class _RemindersPageState extends State<RemindersPage>
     builder: (context, state) => BlocBuilder<RemindersBloc, RemindersState>(
       builder: (context, reminderState) {
         final localizations = AppLocalizations.of(context)!;
-        return PageBody(
-          children: [
-            SectionLabel(localizations.makeSpace),
-            Text(
-              localizations.prayerTime,
-              style: Theme.of(context).textTheme.headlineLarge,
+        final currentPath =
+            GoRouter.of(context).routeInformationProvider.value.uri.path;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              localizations.appName,
+              style: const TextStyle(fontFamily: 'serif'),
             ),
-            const SizedBox(height: 16),
-            Text(
-              reminderState.capability == 'reminder'
-                  ? localizations.soundReminders
-                  : localizations.ringingAlarms,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              localizations.deviceAccess(reminderState.permission),
-              style: const TextStyle(fontSize: 13),
-            ),
-            if (reminderState.permission != 'ready')
-              TextButton(
-                onPressed: bloc.openSettings,
-                child: Text(localizations.openSettings),
+            actions: [
+              IconButton(
+                tooltip: localizations.milestones,
+                onPressed: () => context.push('/progress'),
+                icon: const Icon(Icons.auto_awesome_outlined),
               ),
-            const SizedBox(height: 24),
-            ...state.reminders.map(
-              (reminder) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: QuietCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+            ],
+          ),
+          body: SafeArea(
+            child: PageBody(
+              children: [
+                SectionLabel(localizations.makeSpace),
+                Text(
+                  localizations.prayerTime,
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  reminderState.capability == 'reminder'
+                      ? localizations.soundReminders
+                      : localizations.ringingAlarms,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  localizations.deviceAccess(reminderState.permission),
+                  style: const TextStyle(fontSize: 13),
+                ),
+                if (reminderState.permission != 'ready')
+                  TextButton(
+                    onPressed: bloc.openSettings,
+                    child: Text(localizations.openSettings),
+                  ),
+                const SizedBox(height: 24),
+                ...state.reminders.map(
+                  (reminder) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: QuietCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              timeLabel(reminder.hour, reminder.minute),
-                              style: Theme.of(context).textTheme.headlineMedium,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  timeLabel(reminder.hour, reminder.minute),
+                                  style:
+                                      Theme.of(context).textTheme.headlineMedium,
+                                ),
+                              ),
+                              Switch(
+                                value: reminder.enabled,
+                                onChanged: reminderState.busy
+                                    ? null
+                                    : (value) => bloc.saveReminder(
+                                        reminder.copyWith(enabled: value),
+                                      ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            reminder.weekdays
+                                .map(
+                                  (day) => [
+                                    localizations.monday,
+                                    localizations.tuesday,
+                                    localizations.wednesday,
+                                    localizations.thursday,
+                                    localizations.friday,
+                                    localizations.saturday,
+                                    localizations.sunday,
+                                  ][day - 1],
+                                )
+                                .join(' · '),
+                          ),
+                          if (nextReminder(reminder, DateTime.now())
+                              case final next?)
+                            Text(
+                              localizations.nextAlarm(
+                                calendarDate(next),
+                                timeLabel(reminder.hour, reminder.minute),
+                              ),
                             ),
+                          const SizedBox(height: 8),
+                          Text(
+                            reminder.status == 'pending'
+                                ? localizations.setupIncomplete
+                                : reminder.status == 'paused'
+                                ? localizations.paused
+                                : reminderState.permission == 'ready'
+                                ? localizations.scheduled
+                                : localizations.permissionNeeded,
                           ),
-                          Switch(
-                            value: reminder.enabled,
-                            onChanged: reminderState.busy
-                                ? null
-                                : (value) => bloc.saveReminder(
-                                    reminder.copyWith(enabled: value),
-                                  ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        reminder.weekdays
-                            .map(
-                              (day) => [
-                                localizations.monday,
-                                localizations.tuesday,
-                                localizations.wednesday,
-                                localizations.thursday,
-                                localizations.friday,
-                                localizations.saturday,
-                                localizations.sunday,
-                              ][day - 1],
-                            )
-                            .join(' · '),
-                      ),
-                      if (nextReminder(reminder, DateTime.now())
-                          case final next?)
-                        Text(
-                          localizations.nextAlarm(
-                            calendarDate(next),
-                            timeLabel(reminder.hour, reminder.minute),
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      Text(
-                        reminder.status == 'pending'
-                            ? localizations.setupIncomplete
-                            : reminder.status == 'paused'
-                            ? localizations.paused
-                            : reminderState.permission == 'ready'
-                            ? localizations.scheduled
-                            : localizations.permissionNeeded,
-                      ),
-                      Row(
-                        children: [
-                          TextButton(
-                            onPressed: reminderState.busy
-                                ? null
-                                : () => edit(reminder),
-                            child: Text(localizations.edit),
-                          ),
-                          TextButton(
-                            onPressed: reminderState.busy
-                                ? null
-                                : () => bloc.deleteReminder(reminder.id),
-                            child: Text(localizations.delete),
+                          Row(
+                            children: [
+                              TextButton(
+                                onPressed: reminderState.busy
+                                    ? null
+                                    : () => edit(reminder),
+                                child: Text(localizations.edit),
+                              ),
+                              TextButton(
+                                onPressed: reminderState.busy
+                                    ? null
+                                    : () => bloc.deleteReminder(reminder.id),
+                                child: Text(localizations.delete),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
+                FilledButton.icon(
+                  onPressed: reminderState.busy || state.reminders.length >= 5
+                      ? null
+                      : () => edit(),
+                  icon: const Icon(Icons.add),
+                  label: Text(localizations.addPrayerTime),
+                ),
+                if (state.reminders.length >= 5)
+                  Text(localizations.upToFive),
+                const SizedBox(height: 16),
+                OutlinedButton(
+                  onPressed: reminderState.busy ? null : bloc.testAlarm,
+                  child: Text(localizations.testAlarm),
+                ),
+                const SizedBox(height: 16),
+                Text(localizations.stopAlarmNote),
+              ],
+            ),
+          ),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: switch (currentPath) {
+              '/reminders' => 1,
+              '/history' => 2,
+              '/settings' => 3,
+              _ => 0,
+            },
+            onDestinationSelected: (index) =>
+                context.go(['/', '/reminders', '/history', '/settings'][index]),
+            destinations: [
+              NavigationDestination(
+                icon: const Icon(Icons.wb_sunny_outlined),
+                label: localizations.today,
               ),
-            ),
-            FilledButton.icon(
-              onPressed: reminderState.busy || state.reminders.length >= 5
-                  ? null
-                  : () => edit(),
-              icon: const Icon(Icons.add),
-              label: Text(localizations.addPrayerTime),
-            ),
-            if (state.reminders.length >= 5) Text(localizations.upToFive),
-            const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: reminderState.busy ? null : bloc.testAlarm,
-              child: Text(localizations.testAlarm),
-            ),
-            const SizedBox(height: 16),
-            Text(localizations.stopAlarmNote),
-          ],
+              NavigationDestination(
+                icon: const Icon(Icons.alarm),
+                label: localizations.alarms,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.menu_book_outlined),
+                label: localizations.journal,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.tune),
+                label: localizations.settings,
+              ),
+            ],
+          ),
         );
       },
     ),
