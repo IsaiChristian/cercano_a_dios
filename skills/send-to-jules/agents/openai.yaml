@@ -1,4 +1,0 @@
-interface:
-  display_name: "Send to Google Jules"
-  short_description: "Delegate repository tasks to Google Jules"
-  default_prompt: "Use $send-to-jules to delegate this repository task to Google Jules."
