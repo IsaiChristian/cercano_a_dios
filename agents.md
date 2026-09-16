@@ -256,6 +256,53 @@ Each worker must return:
 
 ---
 
+# Shared Findings, Coordination & Handoffs
+
+Use the existing [`agent-comms/`](agent-comms/README.md) folder as the shared memory and coordination space for this project. Do not create a second `agentcomms` folder.
+
+## Shared board across branches
+
+- The [GitHub coordination board, issue #6](https://github.com/IsaiChristian/cercano_a_dios/issues/6), is the shared record of task ownership, dependencies, discoveries and handoffs across branches and remote sessions. Read its body and latest comments before starting work, changing scope or integrating a result.
+- The coordinator maintains the issue body and task table. Workers append `CLAIM`, `UPDATE`, `HANDOFF` or `READY FOR REVIEW` comments using the issue template; do not overwrite another worker's update. Only mark work merged with a verified merge reference.
+- Record your task, branch/session, base commit and exact write scope before edits. If another claim overlaps, wait for the coordinator to resolve ownership. Branch-local status files are not a cross-branch lock.
+- Post useful findings with evidence and meaningful blockers, not routine polling updates. Keep detailed notes in `agent-comms/<task-id>.md` and link them at an accessible commit or PR; identify notes that are still local-only.
+- Include the board URL and instruction to read/comment on it in every new delegated task prompt. Already-running agents do not receive this file or issue automatically; provide the link through an available follow-up channel or relay their updates as coordinator.
+- If an agent cannot read or comment on GitHub, the coordinator supplies the current board context and posts the agent's structured update. Do not infer that saving a local note notifies another agent or dispatches a handoff.
+- Task coordination comments on this board are part of the assigned workflow. They do not authorize unrelated messages, pushes, merges, extra tasks or PR creation. Follow the user's task scope and tool permissions.
+
+## Before starting work
+
+- Read [`RULES.md`](agent-comms/RULES.md), [`CURRENT_STATUS.md`](agent-comms/CURRENT_STATUS.md), and existing task notes relevant to your scope.
+- Check the actual branch, commit, and working tree. Treat notes as context to verify, not proof that a change is present in your checkout.
+- Claim your task and file ownership in `CURRENT_STATUS.md` before editing. Preserve other agents' entries and user-owned changes.
+- For parallel work, use a separate `agent-comms/<task-id>.md` note per task. The coordinating agent maintains the shared status index; workers update their own notes to avoid competing edits. Honor a narrower task allowlist: if coordination files are excluded, return the note content to the coordinator instead.
+
+## Record useful discoveries
+
+- Add findings that will help another agent avoid repeated investigation: relevant entry points, established patterns, hidden dependencies, behavior that must be preserved, working verification commands, environment limitations, and failed approaches worth avoiding.
+- Keep notes concise and actionable. Include the finding, supporting file or command, the commit or environment it applies to, and its consequence for future work.
+- Separate verified facts from hypotheses. Record failed attempts with the observed result and why the approach was abandoned; do not repeat an unsuccessful approach without new evidence.
+- Link to source files, tests, and existing documentation instead of copying large code blocks, logs, or conversation history. Correct or mark outdated findings when new evidence supersedes them.
+- Store no credentials, private prayer content, recordings, or other sensitive data. Product documentation and implementation code remain in their normal locations.
+
+## When a task is too difficult or blocked
+
+- Follow the existing escalation policy. Hand off when the task exceeds your assigned scope or capability, when a contract or architecture decision is needed, or after two unsuccessful implementation attempts. Do not escalate solely because the task is large.
+- Use [`HANDOFF_TEMPLATE.md`](agent-comms/HANDOFF_TEMPLATE.md) in your task note. Include the objective, acceptance criteria, owner and write scope, starting/current commit, files changed, completed work, exact attempts and results, verification, unresolved questions, and the first concrete next step.
+- State the required decision or expertise and the intended recipient: Flash to Terra; Terra to Astra for architectural issues; Jules to Terra for implementation issues or Astra for architectural issues. If a named worker is unavailable, notify the coordinator rather than silently choosing an expensive replacement.
+- Preserve useful partial work and identify whether it is tested and safe to continue. Do not discard another agent's changes, hide failures, or mark unfinished work complete.
+- Notify the coordinator or receiving agent through the available communication channel and link the handoff note. A saved note alone does not dispatch another agent. If dispatch is unavailable, explicitly report that the handoff is awaiting assignment.
+- Stop changes that depend on the unresolved decision; continue only independent work within your owned scope. Transfer file ownership explicitly before another agent resumes edits.
+
+## At completion or transfer
+
+- Update your task note with changed files, verification results, remaining risks, and useful discoveries. Report unrun checks honestly.
+- Update the shared status, or send the update to its coordinator, with completion/blocker state, handoff link, next owner/action, and any branch or remote session reference.
+- Distinguish local work, remote session output, and merged changes. Do not assume another agent can access uncommitted or unpushed files; communicate the missing context without pushing or pulling unless authorized.
+- Release your ownership when work is complete or the handoff is accepted. Keep the status concise; retain reusable findings in the task notes.
+
+---
+
 # Verification Policy
 
 Every implementation must pass the cheapest appropriate verification.

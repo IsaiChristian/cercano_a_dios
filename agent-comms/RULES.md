@@ -4,6 +4,7 @@ These rules apply to every agent working in this repository.
 
 ## 1. Establish the baseline
 
+- Read the [shared GitHub board](https://github.com/IsaiChristian/cercano_a_dios/issues/6), including recent comments, for cross-branch task ownership and dependencies. Verify required changes against your actual checkout; local status and remote completion labels may be stale.
 - Read `CURRENT_STATUS.md`, then inspect `git status --short --branch` before editing.
 - Treat existing uncommitted changes as user-owned. Do not reset, discard, or overwrite them.
 - If the task requests a baseline commit, create it before making task changes and record its hash in the handoff.
@@ -11,8 +12,9 @@ These rules apply to every agent working in this repository.
 
 ## 2. Claim scope before editing
 
-- Write the task, owner, files or directories in scope, and the next action in `CURRENT_STATUS.md`.
-- Avoid editing files another active agent owns. If scopes overlap, coordinate in the status file before proceeding.
+- Claim cross-branch ownership on the shared board before edits. Workers append comments; the coordinator maintains its task table. Resolve overlapping ownership before proceeding. For parallel tasks, the coordinator updates `CURRENT_STATUS.md` and workers maintain their own `agent-comms/<task-id>.md` notes or return updates when their allowlist excludes coordination files.
+- For a single local task, write the task, owner, files or directories in scope, and the next action in `CURRENT_STATUS.md`. For parallel work, send this update to the coordinator and use your task note.
+- Avoid editing files another active agent owns. If scopes overlap, resolve them on the shared board before proceeding; do not rely on a branch-local status edit to reserve scope.
 - Prefer small, reviewable patches. Use `apply_patch` for source and documentation edits.
 - Do not create parallel implementations of the same behavior just to avoid coordination.
 
@@ -49,6 +51,8 @@ These rules apply to every agent working in this repository.
 - Re-check `git diff --check` and `git status` before handing work off.
 
 ## 7. Communicate useful state
+
+Post meaningful discoveries, blockers, handoffs and readiness for review to the shared board using its template. Include evidence and exact verification results. If GitHub access is unavailable, send the structured update to the coordinator for posting. A handoff must name the unresolved decision, failed attempts, requested recipient and next step; ownership transfer requires acknowledgment, not just a saved note.
 
 Every handoff or status update should answer:
 
