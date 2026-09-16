@@ -6,50 +6,15 @@ import '../../../../data/services/device_services.dart';
 import '../../../../domain/entities/prayer.dart';
 import '../../app/bloc/app_bloc.dart';
 
-class RemindersState {
-  final String capability;
-  final String permission;
-  final bool busy;
-
-  const RemindersState({
-    this.capability = 'loading',
-    this.permission = 'unknown',
-    this.busy = false,
-  });
-}
-
-abstract class RemindersEvent {}
-
-class RemindersStatusRequested extends RemindersEvent {
-  final Completer<void>? result;
-
-  RemindersStatusRequested([this.result]);
-}
-
-class ReminderSaveRequested extends RemindersEvent {
-  final Reminder reminder;
-  final Completer<bool> result;
-
-  ReminderSaveRequested(this.reminder, this.result);
-}
-
-class ReminderDeleteRequested extends RemindersEvent {
-  final int id;
-  final Completer<void> result;
-
-  ReminderDeleteRequested(this.id, this.result);
-}
-
-class ReminderSettingsRequested extends RemindersEvent {}
-
-class ReminderTestRequested extends RemindersEvent {}
+part 'reminders_state.dart';
+part 'reminders_event.dart';
 
 class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
   final AppBloc app;
   final DeviceServices device;
 
   RemindersBloc({required this.app, required this.device})
-      : super(const RemindersState()) {
+    : super(const RemindersState()) {
     on<RemindersStatusRequested>(_onStatusRequested);
     on<ReminderSaveRequested>(_onSaveRequested);
     on<ReminderDeleteRequested>(_onDeleteRequested);
@@ -84,11 +49,13 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
     Emitter<RemindersState> emit,
   ) async {
     try {
-      emit(RemindersState(
-        capability: await device.alarmCapability(),
-        permission: await device.alarmStatus(),
-        busy: state.busy,
-      ));
+      emit(
+        RemindersState(
+          capability: await device.alarmCapability(),
+          permission: await device.alarmStatus(),
+          busy: state.busy,
+        ),
+      );
       event.result?.complete();
     } catch (error) {
       app.report(error);
@@ -104,11 +71,13 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
       event.result.complete(false);
       return;
     }
-    emit(RemindersState(
-      capability: state.capability,
-      permission: state.permission,
-      busy: true,
-    ));
+    emit(
+      RemindersState(
+        capability: state.capability,
+        permission: state.permission,
+        busy: true,
+      ),
+    );
     try {
       final saved = await app.saveReminder(event.reminder);
       event.result.complete(saved);
@@ -116,11 +85,13 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
       app.report(error);
       event.result.complete(false);
     } finally {
-      emit(RemindersState(
-        capability: state.capability,
-        permission: state.permission,
-        busy: false,
-      ));
+      emit(
+        RemindersState(
+          capability: state.capability,
+          permission: state.permission,
+          busy: false,
+        ),
+      );
     }
   }
 
@@ -132,11 +103,13 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
       event.result.complete();
       return;
     }
-    emit(RemindersState(
-      capability: state.capability,
-      permission: state.permission,
-      busy: true,
-    ));
+    emit(
+      RemindersState(
+        capability: state.capability,
+        permission: state.permission,
+        busy: true,
+      ),
+    );
     try {
       await app.deleteReminder(event.id);
       event.result.complete();
@@ -144,11 +117,13 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
       app.report(error);
       event.result.complete();
     } finally {
-      emit(RemindersState(
-        capability: state.capability,
-        permission: state.permission,
-        busy: false,
-      ));
+      emit(
+        RemindersState(
+          capability: state.capability,
+          permission: state.permission,
+          busy: false,
+        ),
+      );
     }
   }
 
