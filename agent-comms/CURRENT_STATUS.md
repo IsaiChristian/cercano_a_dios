@@ -1,5 +1,12 @@
 # Current Agent Status
 
+FIX-INDEPENDENT-CLEANUP complete locally; ownership released.
+Base: main at `339914f8dbf8bf49bf43e233dbe1bf4f1e2ec3a8` (clean checkout).
+SessionBloc now attempts recorder, playback and draft cleanup independently.
+Verification: 14 session tests pass; Flutter analysis, format and diff checks pass.
+Details: [`FIX-INDEPENDENT-CLEANUP.md`](FIX-INDEPENDENT-CLEANUP.md).
+Local changes only; no commit or push. Next: review/commit when requested.
+
 Status: DELEGATION-POLICY complete locally; ownership released.
 Policy: Luna max reads long context; Astra low implements. Higher effort is
 allowed after two documented failed low-effort attempts on the same task.

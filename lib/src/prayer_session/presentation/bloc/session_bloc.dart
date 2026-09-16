@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../data/services/device_services.dart';    
+import '../../../../data/services/device_services.dart';
 import '../../../../data/services/local_storage_service.dart';
 import '../../../../domain/entities/prayer.dart';
 
@@ -349,7 +349,11 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     await _pendingSave?.future;
     try {
       await device.finishRecording();
+    } catch (_) {}
+    try {
       await device.stopPlayback();
+    } catch (_) {}
+    try {
       if (!_audioCommitted && await storage.fileExists(filename)) {
         await storage.deleteFile(filename);
       }

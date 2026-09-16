@@ -58,7 +58,10 @@ class MemoryRepository implements PrayerRepository {
 class FakeDevice extends DeviceServices {
   bool denied = false;
   bool recording = false;
+  bool failFinishRecording = false;
   bool failStopPlayback = false;
+  int finishRecordingCalls = 0;
+  int stopPlaybackCalls = 0;
   int? cancelledSnooze;
   @override
   Future<void> record(String path) async {
@@ -71,6 +74,8 @@ class FakeDevice extends DeviceServices {
 
   @override
   Future<void> finishRecording() async {
+    finishRecordingCalls++;
+    if (failFinishRecording) throw PlatformException(code: 'recording');
     recording = false;
   }
 
@@ -78,6 +83,7 @@ class FakeDevice extends DeviceServices {
   Future<void> stopAlarm() async {}
   @override
   Future<void> stopPlayback() async {
+    stopPlaybackCalls++;
     if (failStopPlayback) throw PlatformException(code: 'playback');
   }
 
@@ -117,6 +123,7 @@ void main() {
     );
   });
   tearDown(() async {
+    device.failFinishRecording = false;
     device.failStopPlayback = false;
     await session.close();
     await app.close();
@@ -197,6 +204,41 @@ void main() {
     expect(repository.records.values.single.audioPath, isNull);
     await session.close();
     expect(await File(session.path).exists(), false);
+  });
+  for (final failures in [(true, false), (false, true), (true, true)]) {
+    test('close cleans draft despite platform failures '
+        '(recording: ${failures.$1}, playback: ${failures.$2})', () async {
+      await session.start();
+      device.failFinishRecording = failures.$1;
+      device.failStopPlayback = failures.$2;
+      final recordingCalls = device.finishRecordingCalls;
+      final playbackCalls = device.stopPlaybackCalls;
+
+      final closing = session.close();
+      expect(identical(session.close(), closing), true);
+      await closing;
+
+      expect(session.isClosed, true);
+      expect(device.finishRecordingCalls, recordingCalls + 1);
+      expect(device.stopPlaybackCalls, playbackCalls + 1);
+      expect(await File(session.path).exists(), false);
+      expect(repository.records, isEmpty);
+    });
+  }
+  test('close preserves committed audio despite platform failures', () async {
+    await session.start();
+    await session.finish();
+    expect(await session.save(), true);
+    device.failFinishRecording = true;
+    device.failStopPlayback = true;
+    final playbackCalls = device.stopPlaybackCalls;
+
+    await session.close();
+
+    expect(session.isClosed, true);
+    expect(device.stopPlaybackCalls, playbackCalls + 1);
+    expect(await File(session.path).exists(), true);
+    expect(repository.records.values.single.audioPath, session.filename);
   });
   test(
     'failed save keeps the draft and can be retried without duplicate credit',
