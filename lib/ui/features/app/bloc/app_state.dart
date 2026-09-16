@@ -1,6 +1,7 @@
 part of 'app_bloc.dart';
 
 class AppState {
+  final Locale locale;
   final List<PrayerSession> sessions;
   final List<Reminder> reminders;
   final bool loading;
@@ -9,6 +10,7 @@ class AppState {
   final bool onboardingComplete;
 
   AppState({
+    this.locale = const Locale('en'),
     List<PrayerSession> sessions = const [],
     List<Reminder> reminders = const [],
     this.loading = false,

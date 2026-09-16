@@ -2,6 +2,12 @@ part of 'app_bloc.dart';
 
 abstract class AppEvent {}
 
+class AppLocaleChanged extends AppEvent {
+  final Locale locale;
+
+  AppLocaleChanged(this.locale);
+}
+
 class AppRefreshRequested extends AppEvent {
   final Completer<void>? result;
 

@@ -140,23 +140,27 @@ class _PrayerAppState extends State<PrayerApp> with WidgetsBindingObserver {
       Provider<DeviceServices>.value(value: widget.app.device),
       BlocProvider<AppBloc>.value(value: widget.app),
     ],
-    child: MaterialApp.router(
-      title: 'Cercano a Dios',
-      onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
-      theme: appTheme(),
-      debugShowCheckedModeBanner: false,
-      routerConfig: router,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      builder: (context, child) => BlocListener<AppBloc, AppState>(
-        listenWhen: (previous, current) =>
-            current.error != null && current.error != previous.error,
-        listener: (context, state) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.error!)));
-        },
-        child: child!,
+    child: BlocBuilder<AppBloc, AppState>(
+      bloc: widget.app,
+      builder: (context, state) => MaterialApp.router(
+        title: 'Cercano a Dios',
+        onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
+        theme: appTheme(),
+        debugShowCheckedModeBanner: false,
+        routerConfig: router,
+        locale: state.locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => BlocListener<AppBloc, AppState>(
+          listenWhen: (previous, current) =>
+              current.error != null && current.error != previous.error,
+          listener: (context, state) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.error!)));
+          },
+          child: child!,
+        ),
       ),
     ),
   );

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../data/services/device_services.dart';
@@ -31,6 +32,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     bool onboardingComplete = false,
     this.closeResources,
   }) : super(AppState(loading: true, onboardingComplete: onboardingComplete)) {
+    on<AppLocaleChanged>(_onLocaleChanged);
     on<AppRefreshRequested>(_onRefresh);
     on<AppErrorReported>(_onErrorReported);
     on<AppOnboardingCompleted>(_onOnboardingCompleted);
@@ -49,6 +51,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   }
 
   String get root => storage.root;
+
+  void setLocale(Locale locale) => add(AppLocaleChanged(locale));
 
   T unwrap<T>(Either<Failure, T> result) =>
       result.fold((Failure failure) => throw failure, (value) => value);
@@ -145,6 +149,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final bytes = await storage.audioBytes();
       emit(
         AppState(
+          locale: state.locale,
           sessions: sessions,
           reminders: reminders,
           audioBytes: bytes,
@@ -156,6 +161,18 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       _emitError(emit, error);
       event.result?.complete();
     }
+  }
+
+  void _onLocaleChanged(AppLocaleChanged event, Emitter<AppState> emit) {
+    emit(
+      AppState(
+        locale: event.locale,
+        sessions: state.sessions,
+        reminders: state.reminders,
+        audioBytes: state.audioBytes,
+        onboardingComplete: state.onboardingComplete,
+      ),
+    );
   }
 
   void _onErrorReported(AppErrorReported event, Emitter<AppState> emit) {
@@ -170,6 +187,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       await storage.completeOnboarding();
       emit(
         AppState(
+          locale: state.locale,
           sessions: state.sessions,
           reminders: state.reminders,
           audioBytes: state.audioBytes,
@@ -370,6 +388,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     final bytes = await storage.audioBytes();
     emit(
       AppState(
+        locale: state.locale,
         sessions: sessions,
         reminders: reminders,
         audioBytes: bytes,
@@ -386,6 +405,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         : 'Something went wrong. Please try again.';
     emit(
       AppState(
+        locale: state.locale,
         sessions: state.sessions,
         reminders: state.reminders,
         audioBytes: state.audioBytes,

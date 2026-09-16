@@ -24,6 +24,27 @@ class SettingsPage extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 24),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(localizations.language),
+            trailing: DropdownButton<Locale>(
+              value: app.state.locale,
+              onChanged: (locale) {
+                if (locale != null) app.setLocale(locale);
+              },
+              items: [
+                DropdownMenuItem(
+                  value: const Locale('en'),
+                  child: Text(localizations.english),
+                ),
+                DropdownMenuItem(
+                  value: const Locale('es'),
+                  child: Text(localizations.spanish),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           QuietCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
