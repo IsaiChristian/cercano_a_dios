@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cercano_a_dios/data/services/device_services.dart';
 import 'package:cercano_a_dios/data/services/local_storage_service.dart';
 import 'package:cercano_a_dios/domain/entities/prayer.dart';
@@ -53,6 +54,15 @@ void main() {
       device: DeviceServices(),
       storage: const LocalStorageService('unused'),
     );
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, state) => HomePage(app: app),
+        ),
+      ],
+    );
     tester.view.physicalSize = const Size(320, 568);
     tester.view.devicePixelRatio = 1;
     addTearDown(() async {
@@ -60,17 +70,19 @@ void main() {
       tester.view.resetDevicePixelRatio();
       await app.close();
       await app.device.interruptions.close();
+      router.dispose();
     });
     await tester.pumpWidget(
       BlocProvider.value(
         value: app,
-        child: MaterialApp(
+        child: MaterialApp.router(
           theme: appTheme(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: MediaQuery(
+          routerConfig: router,
+          builder: (context, child) => MediaQuery(
             data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
-            child: Scaffold(body: HomePage(app: app)),
+            child: child!,
           ),
         ),
       ),

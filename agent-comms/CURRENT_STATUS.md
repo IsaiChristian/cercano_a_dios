@@ -32,3 +32,8 @@ Next action: read the latest board comments for publication/delivery status, sup
 Existing untracked `.agents/` and `skills/` directories are user-owned and outside scope.
 
 Last updated: 2026-09-15
+
+FIX-HOME-ROUTER-TEST complete locally; ownership released. Base d371df2. The
+home widget test retains its fake repository and now mounts a minimal GoRouter
+context required by the navigation refactor. Focused and full suites pass; the
+two stale committed test-output logs were removed. Details: [`FIX-HOME-ROUTER-TEST.md`](FIX-HOME-ROUTER-TEST.md).
