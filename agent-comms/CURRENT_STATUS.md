@@ -1,12 +1,16 @@
 # Current Agent Status
 
-Status: active
+Status: available
 
-Task: FIX-HOME-TEST — fix the stalled home widget test.
-Owner: local Terra worker; root coordinates and verifies integration.
-Scope: `test/presentation/home_test.dart` and a small test fixture only if needed. Root owns this status and the task note.
-Next action: remove real IO from the layout test, preserve small-screen/large-text assertions, run focused checks, then the full suite.
-Coordination: preserve this repair when T05 later updates presentation imports. No application or dependency changes authorized by this task.
+Completed: FIX-HOME-TEST and T05 integration. The home layout test now uses a
+repository stub instead of FFI SQLite/temp-directory setup and verifies the CTA
+after scrolling within the 320x568/large-text viewport. T05's presentation path
+migration was merged with that repair in `fc952eb` and pushed to `origin/main`.
+Details: [`FIX-HOME-TEST.md`](FIX-HOME-TEST.md).
+Verification: `flutter analyze --no-pub` passed; focused home/session tests passed
+(6); full suite passed (35); `git diff --check` passed before commit.
+Next action: keep T05's moved `presentation/` and `src/` imports when later tasks
+update presentation tests. T07/T08 remain waiting for T05 integration.
 
 Shared board: [GitHub issue #6](https://github.com/IsaiChristian/cercano_a_dios/issues/6). Read its body and latest comments for cross-branch ownership; this file is only the local index.
 
