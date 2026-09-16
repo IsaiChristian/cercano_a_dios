@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../data/services/device_services.dart';
 import '../../../../domain/entities/prayer.dart';
-import '../../app/bloc/app_bloc.dart';
+import 'package:cercano_a_dios/src/app/bloc/app_bloc.dart';
 
 part 'reminders_state.dart';
 part 'reminders_event.dart';

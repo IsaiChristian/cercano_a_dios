@@ -7,9 +7,9 @@ import 'package:cercano_a_dios/data/services/local_storage_service.dart';
 import 'package:cercano_a_dios/domain/entities/prayer.dart';
 import 'package:cercano_a_dios/domain/failures/failure.dart';
 import 'package:cercano_a_dios/domain/repositories/prayer_repository.dart';
-import 'package:cercano_a_dios/ui/core/theme.dart';
-import 'package:cercano_a_dios/ui/features/app/bloc/app_bloc.dart';
-import 'package:cercano_a_dios/ui/features/home/views/home_page.dart';
+import 'package:cercano_a_dios/presentation/theme.dart';
+import 'package:cercano_a_dios/src/app/bloc/app_bloc.dart';
+import 'package:cercano_a_dios/src/home/presentation/pages/home_page.dart';
 import 'package:cercano_a_dios/l10n/app_localizations.dart';
 
 class _FakePrayerRepository implements PrayerRepository {

@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../domain/use_cases/calculate_progress.dart';
-import '../../../core/theme.dart';
-import '../../../core/widgets.dart';
-import '../../app/bloc/app_bloc.dart';
+import 'package:cercano_a_dios/presentation/theme.dart';
+import 'package:cercano_a_dios/presentation/widgets/quiet_card.dart';
+import 'package:cercano_a_dios/presentation/widgets/page_body.dart';
+import 'package:cercano_a_dios/presentation/widgets/section_label.dart';
+import 'package:cercano_a_dios/src/app/bloc/app_bloc.dart';
 
 class ProgressPage extends StatelessWidget {
   final AppBloc app;

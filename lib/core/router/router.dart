@@ -4,18 +4,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/prompts.dart';
 import '../../l10n/app_localizations.dart';
-import '../../ui/core/prompt_localization.dart';
-import '../../ui/core/theme.dart';
-import '../../ui/core/widgets.dart';
-import '../../ui/features/app/bloc/app_bloc.dart';
-import '../../ui/features/history/views/history_page.dart';
-import '../../ui/features/home/views/home_page.dart';
-import '../../ui/features/prayer_session/views/session_page.dart';
-import '../../ui/features/prayer_session/bloc/session_bloc.dart';
-import '../../ui/features/progress/views/progress_page.dart';
-import '../../ui/features/reminders/bloc/reminders_bloc.dart';
-import '../../ui/features/reminders/views/reminders_page.dart';
-import '../../ui/features/settings/views/settings_page.dart';
+import 'package:cercano_a_dios/presentation/prompt_localization.dart';
+import 'package:cercano_a_dios/presentation/theme.dart';
+import 'package:cercano_a_dios/ui/core/widgets.dart';
+import 'package:cercano_a_dios/src/app/bloc/app_bloc.dart';
+import 'package:cercano_a_dios/src/history/presentation/pages/history_page.dart';
+import 'package:cercano_a_dios/src/home/presentation/pages/home_page.dart';
+import 'package:cercano_a_dios/src/prayer_session/presentation/pages/session_page.dart';
+import 'package:cercano_a_dios/src/prayer_session/presentation/bloc/session_bloc.dart';
+import 'package:cercano_a_dios/src/progress/presentation/pages/progress_page.dart';
+import 'package:cercano_a_dios/src/reminders/presentation/bloc/reminders_bloc.dart';
+import 'package:cercano_a_dios/src/reminders/presentation/pages/reminders_page.dart';
+import 'package:cercano_a_dios/src/settings/presentation/pages/settings_page.dart';
 
 GoRouter createRouter(AppBloc app) => GoRouter(
   initialLocation: app.state.onboardingComplete ? '/' : '/welcome',

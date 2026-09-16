@@ -5,8 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../domain/entities/prayer.dart';
-import '../../../core/widgets.dart';
-import '../../app/bloc/app_bloc.dart';
+import 'package:cercano_a_dios/presentation/widgets/quiet_card.dart';
+import 'package:cercano_a_dios/presentation/widgets/page_body.dart';
+import 'package:cercano_a_dios/presentation/widgets/section_label.dart';
+import 'package:cercano_a_dios/presentation/dialogs/confirm.dart';
+import 'package:cercano_a_dios/src/app/bloc/app_bloc.dart';
 
 class HistoryPage extends StatefulWidget {
   final AppBloc app;

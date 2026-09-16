@@ -6,9 +6,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../domain/entities/prayer.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../core/theme.dart';
-import '../../../core/widgets.dart';
-import '../../app/bloc/app_bloc.dart';
+import 'package:cercano_a_dios/presentation/theme.dart';
+import 'package:cercano_a_dios/presentation/widgets/quiet_card.dart';
+import 'package:cercano_a_dios/presentation/widgets/page_body.dart';
+import 'package:cercano_a_dios/presentation/widgets/section_label.dart';
+import 'package:cercano_a_dios/presentation/formatters/time_label.dart';
+import 'package:cercano_a_dios/src/app/bloc/app_bloc.dart';
 import '../bloc/session_bloc.dart';
 
 class SessionPage extends StatefulWidget {
