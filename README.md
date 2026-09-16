@@ -25,8 +25,8 @@ Uses the [TechTest](https://github.com/IsaiChristian/TechTest) architecture as a
 lib/core/          dependency composition, router, and shared failure boundary
 lib/domain/        entities, repository contracts, streak and scheduling rules
 lib/data/          SQLite repository, raw data services, mapping, offline prompts
-lib/ui/core/       theme and reusable widgets
-lib/ui/features/   feature views and event-driven BLoCs
+lib/presentation/  theme and reusable widgets
+lib/src/<feature>/presentation/ feature views and event-driven BLoCs
 android/           Kotlin audio and alarm adapters
 ios/               Swift audio, notifications, and AlarmKit adapter
 test/              Dart unit, persistence, state, and widget tests

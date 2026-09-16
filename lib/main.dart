@@ -7,8 +7,8 @@ import 'core/di/bootstrap.dart';
 import 'l10n/app_localizations.dart';
 import 'core/router/router.dart';
 import 'data/services/device_services.dart';
-import 'ui/core/theme.dart';
-import 'ui/features/app/bloc/app_bloc.dart';
+import 'package:cercano_a_dios/presentation/theme.dart';
+import 'package:cercano_a_dios/src/app/bloc/app_bloc.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
