@@ -8,62 +8,8 @@ import '../../../../data/services/device_services.dart';
 import '../../../../data/services/local_storage_service.dart';
 import '../../../../domain/entities/prayer.dart';
 
-enum SessionPhase { ready, starting, recording, stopping, review, saving, complete }
-
-class SessionState {
-  final SessionPhase phase;
-  final int seconds;
-  final double level;
-  final String? error;
-
-  const SessionState(
-    this.phase, {
-    this.seconds = 0,
-    this.level = 0,
-    this.error,
-  });
-}
-
-abstract class SessionEvent {}
-
-class SessionStartRequested extends SessionEvent {
-  final Completer<void> result;
-
-  SessionStartRequested(this.result);
-}
-
-class SessionFinishRequested extends SessionEvent {
-  final Completer<void>? result;
-
-  SessionFinishRequested([this.result]);
-}
-
-class SessionAmplitudeRequested extends SessionEvent {}
-
-class SessionPlaybackRequested extends SessionEvent {
-  final Completer<void>? result;
-
-  SessionPlaybackRequested([this.result]);
-}
-
-class SessionPlaybackStopped extends SessionEvent {
-  final Completer<void>? result;
-
-  SessionPlaybackStopped([this.result]);
-}
-
-class SessionSaveRequested extends SessionEvent {
-  final bool silent;
-  final Completer<bool> result;
-
-  SessionSaveRequested({required this.silent, required this.result});
-}
-
-class SessionInterrupted extends SessionEvent {
-  final Completer<void>? result;
-
-  SessionInterrupted([this.result]);
-}
+part 'session_state.dart';
+part 'session_event.dart';
 
 typedef CompletePrayerSession = Future<bool> Function(PrayerSession session);
 
@@ -159,16 +105,19 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     SessionStartRequested event,
     Emitter<SessionState> emit,
   ) async {
-    if (state.phase != SessionPhase.ready && state.phase != SessionPhase.review) {
+    if (state.phase != SessionPhase.ready &&
+        state.phase != SessionPhase.review) {
       event.result.complete();
       return;
     }
     if (audioBytes() >= 99 * 1024 * 1024) {
-      emit(const SessionState(
-        SessionPhase.ready,
-        error:
-            'Recording storage is full. Free some space in Settings or reflect silently.',
-      ));
+      emit(
+        const SessionState(
+          SessionPhase.ready,
+          error:
+              'Recording storage is full. Free some space in Settings or reflect silently.',
+        ),
+      );
       event.result.complete();
       return;
     }
@@ -203,13 +152,15 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
       });
       event.result.complete();
     } catch (error) {
-      emit(SessionState(
-        SessionPhase.ready,
-        error: error is PlatformException
-            ? error.message ??
-                'Could not start recording. You can still reflect silently.'
-            : 'Could not start recording. You can still reflect silently.',
-      ));
+      emit(
+        SessionState(
+          SessionPhase.ready,
+          error: error is PlatformException
+              ? error.message ??
+                    'Could not start recording. You can still reflect silently.'
+              : 'Could not start recording. You can still reflect silently.',
+        ),
+      );
       event.result.complete();
     }
   }
@@ -235,11 +186,9 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     try {
       final level = await device.amplitude();
       if (!isClosed && state.phase == SessionPhase.recording) {
-        emit(SessionState(
-          SessionPhase.recording,
-          seconds: seconds,
-          level: level,
-        ));
+        emit(
+          SessionState(SessionPhase.recording, seconds: seconds, level: level),
+        );
       }
     } catch (_) {
       add(SessionFinishRequested());
@@ -254,16 +203,19 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     emit(SessionState(SessionPhase.stopping, seconds: seconds));
     try {
       await device.finishRecording();
-      _hasRecording = await storage.fileExists(filename) &&
+      _hasRecording =
+          await storage.fileExists(filename) &&
           await storage.fileLength(filename) > 0;
       emit(SessionState(SessionPhase.review, seconds: seconds));
     } catch (_) {
-      emit(SessionState(
-        SessionPhase.review,
-        seconds: seconds,
-        error:
-            'Recording was interrupted. Try playback, record again, or complete without audio.',
-      ));
+      emit(
+        SessionState(
+          SessionPhase.review,
+          seconds: seconds,
+          error:
+              'Recording was interrupted. Try playback, record again, or complete without audio.',
+        ),
+      );
     }
   }
 
@@ -275,13 +227,15 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
       await device.play(path);
       event.result?.complete();
     } catch (_) {
-      emit(SessionState(
-        state.phase,
-        seconds: state.seconds,
-        level: state.level,
-        error:
-            'Could not play this recording. Please record again or complete without audio.',
-      ));
+      emit(
+        SessionState(
+          state.phase,
+          seconds: state.seconds,
+          level: state.level,
+          error:
+              'Could not play this recording. Please record again or complete without audio.',
+        ),
+      );
       event.result?.complete();
     }
   }
@@ -300,7 +254,8 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     SessionSaveRequested event,
     Emitter<SessionState> emit,
   ) async {
-    if (state.phase != SessionPhase.ready && state.phase != SessionPhase.review) {
+    if (state.phase != SessionPhase.ready &&
+        state.phase != SessionPhase.review) {
       event.result.complete(false);
       return;
     }
@@ -336,19 +291,25 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
           }
         }
       } else {
-        emit(SessionState(
-          _hasRecording ? SessionPhase.review : SessionPhase.ready,
-          seconds: seconds,
-          error: lastError?.call() ?? 'Could not save this moment. Please try again.',
-        ));
+        emit(
+          SessionState(
+            _hasRecording ? SessionPhase.review : SessionPhase.ready,
+            seconds: seconds,
+            error:
+                lastError?.call() ??
+                'Could not save this moment. Please try again.',
+          ),
+        );
       }
       event.result.complete(ok);
     } catch (_) {
-      emit(SessionState(
-        _hasRecording ? SessionPhase.review : SessionPhase.ready,
-        seconds: seconds,
-        error: 'Could not save this moment. Please try again.',
-      ));
+      emit(
+        SessionState(
+          _hasRecording ? SessionPhase.review : SessionPhase.ready,
+          seconds: seconds,
+          error: 'Could not save this moment. Please try again.',
+        ),
+      );
       event.result.complete(false);
     }
   }

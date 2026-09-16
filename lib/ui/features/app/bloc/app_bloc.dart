@@ -11,112 +11,8 @@ import '../../../../domain/failures/failure.dart';
 import '../../../../domain/repositories/prayer_repository.dart';
 import '../../../../domain/use_cases/calculate_progress.dart';
 
-class AppState {
-  final List<PrayerSession> sessions;
-  final List<Reminder> reminders;
-  final bool loading;
-  final String? error;
-  final int audioBytes;
-  final bool onboardingComplete;
-
-  AppState({
-    List<PrayerSession> sessions = const [],
-    List<Reminder> reminders = const [],
-    this.loading = false,
-    this.error,
-    this.audioBytes = 0,
-    this.onboardingComplete = false,
-  })  : sessions = List.unmodifiable(sessions),
-        reminders = List.unmodifiable(reminders);
-
-  PrayerProgress progress(DateTime now) => calculateProgress(sessions, now);
-}
-
-abstract class AppEvent {}
-
-class AppRefreshRequested extends AppEvent {
-  final Completer<void>? result;
-
-  AppRefreshRequested([this.result]);
-}
-
-class AppErrorReported extends AppEvent {
-  final Object error;
-
-  AppErrorReported(this.error);
-}
-
-class AppOnboardingCompleted extends AppEvent {
-  final Completer<void>? result;
-
-  AppOnboardingCompleted([this.result]);
-}
-
-class AppPrayerCompleted extends AppEvent {
-  final PrayerSession session;
-  final Completer<bool>? result;
-
-  AppPrayerCompleted(this.session, [this.result]);
-}
-
-class AppSessionDeleted extends AppEvent {
-  final String id;
-  final Completer<void>? result;
-
-  AppSessionDeleted(this.id, [this.result]);
-}
-
-class AppAudioDeleted extends AppEvent {
-  final String id;
-  final Completer<void>? result;
-
-  AppAudioDeleted(this.id, [this.result]);
-}
-
-class AppAllAudioDeleted extends AppEvent {
-  final Completer<void>? result;
-
-  AppAllAudioDeleted([this.result]);
-}
-
-class AppReminderSaved extends AppEvent {
-  final Reminder reminder;
-  final Completer<bool>? result;
-
-  AppReminderSaved(this.reminder, [this.result]);
-}
-
-class AppReminderDeleted extends AppEvent {
-  final int id;
-  final Completer<void>? result;
-
-  AppReminderDeleted(this.id, [this.result]);
-}
-
-class AppReminderSnoozeCancelled extends AppEvent {
-  final int id;
-  final Completer<void>? result;
-
-  AppReminderSnoozeCancelled(this.id, [this.result]);
-}
-
-class AppDataReset extends AppEvent {
-  final Completer<bool>? result;
-
-  AppDataReset([this.result]);
-}
-
-class AppAudioPlaybackRequested extends AppEvent {
-  final PrayerSession session;
-
-  AppAudioPlaybackRequested(this.session);
-}
-
-class AppAudioPlaybackStopped extends AppEvent {}
-
-class AppDeviceSettingsRequested extends AppEvent {}
-
-class AppAlarmTestRequested extends AppEvent {}
+part 'app_state.dart';
+part 'app_event.dart';
 
 /// Application coordinator for journal state and cross-feature commands.
 ///
@@ -134,10 +30,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     required this.storage,
     bool onboardingComplete = false,
     this.closeResources,
-  }) : super(AppState(
-          loading: true,
-          onboardingComplete: onboardingComplete,
-        )) {
+  }) : super(AppState(loading: true, onboardingComplete: onboardingComplete)) {
     on<AppRefreshRequested>(_onRefresh);
     on<AppErrorReported>(_onErrorReported);
     on<AppOnboardingCompleted>(_onOnboardingCompleted);
@@ -157,10 +50,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   String get root => storage.root;
 
-  T unwrap<T>(Either<Failure, T> result) => result.fold(
-        (Failure failure) => throw failure,
-        (value) => value,
-      );
+  T unwrap<T>(Either<Failure, T> result) =>
+      result.fold((Failure failure) => throw failure, (value) => value);
 
   Future<void> refresh() {
     final result = Completer<void>();
@@ -252,12 +143,14 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final sessions = unwrap(await repository.sessions());
       final reminders = unwrap(await repository.reminders());
       final bytes = await storage.audioBytes();
-      emit(AppState(
-        sessions: sessions,
-        reminders: reminders,
-        audioBytes: bytes,
-        onboardingComplete: state.onboardingComplete,
-      ));
+      emit(
+        AppState(
+          sessions: sessions,
+          reminders: reminders,
+          audioBytes: bytes,
+          onboardingComplete: state.onboardingComplete,
+        ),
+      );
       event.result?.complete();
     } catch (error) {
       _emitError(emit, error);
@@ -275,12 +168,14 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     try {
       await storage.completeOnboarding();
-      emit(AppState(
-        sessions: state.sessions,
-        reminders: state.reminders,
-        audioBytes: state.audioBytes,
-        onboardingComplete: true,
-      ));
+      emit(
+        AppState(
+          sessions: state.sessions,
+          reminders: state.reminders,
+          audioBytes: state.audioBytes,
+          onboardingComplete: true,
+        ),
+      );
       event.result?.complete();
     } catch (error) {
       _emitError(emit, error);
@@ -353,16 +248,20 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     Emitter<AppState> emit,
   ) async {
     try {
-      unwrap(await repository.saveReminder(
-        event.reminder.copyWith(status: 'pending'),
-      ));
+      unwrap(
+        await repository.saveReminder(
+          event.reminder.copyWith(status: 'pending'),
+        ),
+      );
       await device.cancel(event.reminder.id);
       if (event.reminder.enabled) await device.schedule(event.reminder);
-      unwrap(await repository.saveReminder(
-        event.reminder.copyWith(
-          status: event.reminder.enabled ? 'ready' : 'paused',
+      unwrap(
+        await repository.saveReminder(
+          event.reminder.copyWith(
+            status: event.reminder.enabled ? 'ready' : 'paused',
+          ),
         ),
-      ));
+      );
       await _refreshState(emit);
       event.result?.complete(true);
     } catch (error) {
@@ -404,10 +303,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<void> _onDataReset(
-    AppDataReset event,
-    Emitter<AppState> emit,
-  ) async {
+  Future<void> _onDataReset(AppDataReset event, Emitter<AppState> emit) async {
     try {
       await device.stopPlayback();
       await device.cancelAll();
@@ -472,27 +368,31 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     final sessions = unwrap(await repository.sessions());
     final reminders = unwrap(await repository.reminders());
     final bytes = await storage.audioBytes();
-    emit(AppState(
-      sessions: sessions,
-      reminders: reminders,
-      audioBytes: bytes,
-      onboardingComplete: onboardingComplete ?? state.onboardingComplete,
-    ));
+    emit(
+      AppState(
+        sessions: sessions,
+        reminders: reminders,
+        audioBytes: bytes,
+        onboardingComplete: onboardingComplete ?? state.onboardingComplete,
+      ),
+    );
   }
 
   void _emitError(Emitter<AppState> emit, Object error) {
     final message = error is Failure
         ? error.message
         : error is PlatformException
-            ? error.message ?? 'Check your device settings and try again.'
-            : 'Something went wrong. Please try again.';
-    emit(AppState(
-      sessions: state.sessions,
-      reminders: state.reminders,
-      audioBytes: state.audioBytes,
-      error: message,
-      onboardingComplete: state.onboardingComplete,
-    ));
+        ? error.message ?? 'Check your device settings and try again.'
+        : 'Something went wrong. Please try again.';
+    emit(
+      AppState(
+        sessions: state.sessions,
+        reminders: state.reminders,
+        audioBytes: state.audioBytes,
+        error: message,
+        onboardingComplete: state.onboardingComplete,
+      ),
+    );
   }
 
   @override
