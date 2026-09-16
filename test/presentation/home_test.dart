@@ -48,7 +48,7 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
-            child: Scaffold(body: HomePage(app: app)),
+            child: Scaffold(body: SingleChildScrollView(child: HomePage(app: app))),
           ),
         ),
       ),
