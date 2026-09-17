@@ -5,6 +5,24 @@ Preserved feature-scoped BLoCs (HistoryBloc, AudioBloc, RemindersBloc) from main
 and Equatable entities/failures/BLoC states from PR14. Added RemindersState Equatable
 regression test. Verification: dart format, dart analyze, flutter test passed.
 
+R01/R02 merged into origin/main (PR #16 and PR #17).
+- R01: `codex/r01-auth-integration` (`f514e2a`) merged (PR #16). Complete authentication
+  and per-user app integration: bootstrap configuration, reactive routing guards,
+  settings sign-out, gated alarm navigation, legacy anonymous data preservation,
+  and 15 new integration tests (140/140 passed). Details: [`R01-AUTH-INTEGRATION.md`](R01-AUTH-INTEGRATION.md).
+- R02: `codex/r02-audio-state-sync` (`68a287d`) merged (PR #17).
+  AppBloc audio mutation synchronization, AudioBloc/HistoryBloc synchronization helpers,
+  quota enforcement, committed audio preservation, and 16 new/expanded regression tests
+  (141/141 passed). Details: [`R02-AUDIO-STATE-SYNC.md`](R02-AUDIO-STATE-SYNC.md).
+
+IMPLEMENTATION-REVIEW complete locally; ownership released. Base: main `4d8e66e`.
+Created [22 prioritized review tasks](../docs/IMPLEMENTATION_REVIEW_TASKS.md) with
+evidence and acceptance criteria. Analysis clean; 125 tests passed; read-only
+format check reports 13 files; native/device/live-auth validation not run.
+Application source and existing native changes preserved. No commit or push.
+Details: [IMPLEMENTATION-REVIEW.md](IMPLEMENTATION-REVIEW.md). Next: select and claim
+a narrow task before implementation; all proposed tasks remain unassigned.
+
 REFACTOR-FEATURE-BLOCS complete locally; ownership released.
 Branch: `refactor-feature-blocs` (worktree `.worktrees/refactor-feature-blocs`) from `j04-local-profiles` (`c906822a`).
 Extracted feature-scoped BLoCs (`HistoryBloc`, `AudioBloc`, `RemindersBloc`) from the `AppBloc`
