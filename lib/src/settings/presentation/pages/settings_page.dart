@@ -8,6 +8,7 @@ import 'package:cercano_a_dios/presentation/widgets/page_body.dart';
 import 'package:cercano_a_dios/presentation/widgets/section_label.dart';
 import 'package:cercano_a_dios/presentation/dialogs/confirm.dart';
 import 'package:cercano_a_dios/src/app/bloc/app_bloc.dart';
+import 'package:cercano_a_dios/src/auth/presentation/bloc/auth_bloc.dart';
 
 class SettingsPage extends StatelessWidget {
   final AppBloc app;
@@ -20,7 +21,9 @@ class SettingsPage extends StatelessWidget {
     builder: (context, _) {
       final localizations = AppLocalizations.of(context)!;
       final mb = app.state.audioBytes / (1024 * 1024);
-      final currentPath = GoRouter.of(context).routeInformationProvider.value.uri.path;
+      final currentPath = GoRouter.of(
+        context,
+      ).routeInformationProvider.value.uri.path;
 
       return Scaffold(
         appBar: AppBar(
@@ -123,6 +126,15 @@ class SettingsPage extends StatelessWidget {
                 },
                 child: Text(localizations.deleteAppData),
               ),
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: () {
+                  try {
+                    context.read<AuthBloc>().add(const AuthSignOutRequested());
+                  } catch (_) {}
+                },
+                child: Text(localizations.signOut),
+              ),
               const SizedBox(height: 24),
               Text(localizations.footer, textAlign: TextAlign.center),
             ],
@@ -160,4 +172,3 @@ class SettingsPage extends StatelessWidget {
     },
   );
 }
-

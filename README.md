@@ -67,9 +67,34 @@ The Android application ID / iOS bundle ID is provisionally `com.cercanoadios.ap
 
 These are build targets, not verified device-compatibility claims. The app explains reminder mode on older iPhones. Android exact-alarm and notification permission changes can prevent alarms; setup remains visibly incomplete until scheduling succeeds.
 
+## Authentication & Per-User Isolation
+
+Cercano a Dios isolates all journal data, SQLite databases, and audio recordings per authenticated user account under `profiles/<hex_user_id>/`.
+
+### Configuration
+- **Appwrite Backend (Default)**: Production builds target Appwrite authentication. Both endpoint and project ID must be supplied at compile/run time:
+  ```sh
+  flutter run \
+    --dart-define=APPWRITE_ENDPOINT=https://your-appwrite-server/v1 \
+    --dart-define=APPWRITE_PROJECT_ID=your_project_id
+  ```
+  Missing or empty Appwrite configuration throws a fail-fast `StateError` on startup, displaying a recoverable error screen with a retry button instead of silently falling back.
+- **Fake Backend (Testing / Offline)**: For local testing and automated tests without an Appwrite instance, explicitly select the fake backend:
+  ```sh
+  flutter run --dart-define=AUTH_BACKEND=fake
+  ```
+
+### Data Isolation & Legacy Data Preservation
+- Each user's database, welcomed state, and voice recordings live in an isolated directory keyed deterministically by hexadecimal user ID (`profiles/<hex_user_id>/`).
+- **Legacy Data Guarantee**: Any pre-existing files in the un-scoped root directory (`baseRoot`) from prior single-user installations are preserved untouched. The app neither moves, modifies, nor deletes legacy data.
+
+### Alarm Gating & Cross-Profile Boundary (R17)
+- Native alarm callbacks (`openPrayer` and `consumeOpenPrayer`) are gated by `AppSessionBloc.isValidReminderId(reminderId)`. Alarms referencing reminder IDs not present in the currently active authenticated profile are dropped to avoid stale cross-user navigation.
+- **Limitation (Tracked in R17)**: The platform alarm channel transmits only integer reminder IDs without user ownership metadata. In the edge case where two distinct profiles register identical reminder IDs and the app restarts under a different profile, native channel disambiguation is tracked as part of task R17.
+
 ## Tests and validation
 
-The actual tests are **Dart tests using `flutter_test`**, under `test/`. They cover date boundaries, duplicate saves, file cleanup, deletion semantics, microphone denial, save retry, interruption, and a small-screen widget layout. Native hardware behavior requires the device checklist.
+The actual tests are **Dart tests using `flutter_test`**, under `test/`. They cover date boundaries, duplicate saves, file cleanup, deletion semantics, microphone denial, save retry, interruption, authentication routing, profile lifecycle, and integration flows. Native hardware behavior requires the device checklist.
 
 See [validation status](docs/VALIDATION.md), [implementation plan](docs/IMPLEMENTATION_PLAN.md), and [PRD](docs/PRD.md).
 
