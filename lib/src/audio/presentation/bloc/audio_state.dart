@@ -6,6 +6,7 @@ class AudioState extends Equatable {
   final String? playingSessionId;
   final bool busy;
   final String? error;
+  final AudioDeleteResult? lastDeleteResult;
 
   const AudioState({
     this.audioBytes = 0,
@@ -13,6 +14,7 @@ class AudioState extends Equatable {
     this.playingSessionId,
     this.busy = false,
     this.error,
+    this.lastDeleteResult,
   });
 
   AudioState copyWith({
@@ -23,6 +25,8 @@ class AudioState extends Equatable {
     bool? busy,
     String? error,
     bool clearError = false,
+    AudioDeleteResult? lastDeleteResult,
+    bool clearDeleteResult = false,
   }) {
     return AudioState(
       audioBytes: audioBytes ?? this.audioBytes,
@@ -32,6 +36,9 @@ class AudioState extends Equatable {
           : (playingSessionId ?? this.playingSessionId),
       busy: busy ?? this.busy,
       error: clearError ? null : (error ?? this.error),
+      lastDeleteResult: clearDeleteResult
+          ? null
+          : (lastDeleteResult ?? this.lastDeleteResult),
     );
   }
 
@@ -42,5 +49,6 @@ class AudioState extends Equatable {
     playingSessionId,
     busy,
     error,
+    lastDeleteResult,
   ];
 }
