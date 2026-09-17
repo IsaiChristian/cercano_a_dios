@@ -13,7 +13,6 @@ import 'package:cercano_a_dios/src/home/presentation/pages/home_page.dart';
 import 'package:cercano_a_dios/src/prayer_session/presentation/pages/session_page.dart';
 import 'package:cercano_a_dios/src/prayer_session/presentation/bloc/session_bloc.dart';
 import 'package:cercano_a_dios/src/progress/presentation/pages/progress_page.dart';
-import 'package:cercano_a_dios/src/reminders/presentation/bloc/reminders_bloc.dart';
 import 'package:cercano_a_dios/src/reminders/presentation/pages/reminders_page.dart';
 import 'package:cercano_a_dios/src/settings/presentation/pages/settings_page.dart';
 
@@ -63,8 +62,8 @@ GoRouter createRouter(AppBloc app) => GoRouter(
     ),
     GoRoute(
       path: '/reminders',
-      builder: (context, state) => BlocProvider(
-        create: (_) => RemindersBloc(app: app, device: app.device),
+      builder: (context, state) => BlocProvider<RemindersBloc>.value(
+        value: app.remindersBloc,
         child: const RemindersPage(),
       ),
     ),

@@ -26,6 +26,7 @@ class AppState extends Equatable {
     List<Reminder>? reminders,
     bool? loading,
     String? error,
+    bool clearError = false,
     int? audioBytes,
     bool? onboardingComplete,
   }) {
@@ -34,7 +35,7 @@ class AppState extends Equatable {
       sessions: sessions ?? this.sessions,
       reminders: reminders ?? this.reminders,
       loading: loading ?? this.loading,
-      error: error ?? this.error,
+      error: clearError ? null : (error ?? this.error),
       audioBytes: audioBytes ?? this.audioBytes,
       onboardingComplete: onboardingComplete ?? this.onboardingComplete,
     );
@@ -44,6 +45,12 @@ class AppState extends Equatable {
 
   @override
   List<Object?> get props => [
-    locale, sessions, reminders, loading, error, audioBytes, onboardingComplete,
+    locale,
+    sessions,
+    reminders,
+    loading,
+    error,
+    audioBytes,
+    onboardingComplete,
   ];
 }

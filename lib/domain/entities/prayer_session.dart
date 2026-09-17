@@ -25,7 +25,14 @@ class PrayerSession extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, promptId, promptText, localDate, completedAt,
-    durationSeconds, offsetMinutes, spoken, audioPath,
+    id,
+    promptId,
+    promptText,
+    localDate,
+    completedAt,
+    durationSeconds,
+    offsetMinutes,
+    spoken,
+    audioPath,
   ];
 }

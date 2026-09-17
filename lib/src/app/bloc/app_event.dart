@@ -1,93 +1,119 @@
 part of 'app_bloc.dart';
 
-abstract class AppEvent {}
+abstract class AppEvent {
+  const AppEvent();
+}
 
 class AppLocaleChanged extends AppEvent {
   final Locale locale;
 
-  AppLocaleChanged(this.locale);
+  const AppLocaleChanged(this.locale);
 }
 
 class AppRefreshRequested extends AppEvent {
   final Completer<void>? result;
 
-  AppRefreshRequested([this.result]);
+  const AppRefreshRequested([this.result]);
 }
 
 class AppErrorReported extends AppEvent {
   final Object error;
 
-  AppErrorReported(this.error);
+  const AppErrorReported(this.error);
 }
 
 class AppOnboardingCompleted extends AppEvent {
   final Completer<void>? result;
 
-  AppOnboardingCompleted([this.result]);
+  const AppOnboardingCompleted([this.result]);
 }
 
 class AppPrayerCompleted extends AppEvent {
   final PrayerSession session;
   final Completer<bool>? result;
 
-  AppPrayerCompleted(this.session, [this.result]);
+  const AppPrayerCompleted(this.session, [this.result]);
 }
 
 class AppSessionDeleted extends AppEvent {
   final String id;
   final Completer<void>? result;
 
-  AppSessionDeleted(this.id, [this.result]);
+  const AppSessionDeleted(this.id, [this.result]);
 }
 
 class AppAudioDeleted extends AppEvent {
   final String id;
   final Completer<void>? result;
 
-  AppAudioDeleted(this.id, [this.result]);
+  const AppAudioDeleted(this.id, [this.result]);
 }
 
 class AppAllAudioDeleted extends AppEvent {
   final Completer<void>? result;
 
-  AppAllAudioDeleted([this.result]);
+  const AppAllAudioDeleted([this.result]);
 }
 
 class AppReminderSaved extends AppEvent {
   final Reminder reminder;
   final Completer<bool>? result;
 
-  AppReminderSaved(this.reminder, [this.result]);
+  const AppReminderSaved(this.reminder, [this.result]);
 }
 
 class AppReminderDeleted extends AppEvent {
   final int id;
   final Completer<void>? result;
 
-  AppReminderDeleted(this.id, [this.result]);
+  const AppReminderDeleted(this.id, [this.result]);
 }
 
 class AppReminderSnoozeCancelled extends AppEvent {
   final int id;
   final Completer<void>? result;
 
-  AppReminderSnoozeCancelled(this.id, [this.result]);
+  const AppReminderSnoozeCancelled(this.id, [this.result]);
 }
 
 class AppDataReset extends AppEvent {
   final Completer<bool>? result;
 
-  AppDataReset([this.result]);
+  const AppDataReset([this.result]);
 }
 
 class AppAudioPlaybackRequested extends AppEvent {
   final PrayerSession session;
 
-  AppAudioPlaybackRequested(this.session);
+  const AppAudioPlaybackRequested(this.session);
 }
 
-class AppAudioPlaybackStopped extends AppEvent {}
+class AppAudioPlaybackStopped extends AppEvent {
+  const AppAudioPlaybackStopped();
+}
 
-class AppDeviceSettingsRequested extends AppEvent {}
+class AppDeviceSettingsRequested extends AppEvent {
+  const AppDeviceSettingsRequested();
+}
 
-class AppAlarmTestRequested extends AppEvent {}
+class AppAlarmTestRequested extends AppEvent {
+  const AppAlarmTestRequested();
+}
+
+class _AppSessionsUpdated extends AppEvent {
+  final List<PrayerSession> sessions;
+
+  const _AppSessionsUpdated(this.sessions);
+}
+
+class _AppRemindersUpdated extends AppEvent {
+  final List<Reminder> reminders;
+
+  const _AppRemindersUpdated(this.reminders);
+}
+
+class _AppAudioBytesUpdated extends AppEvent {
+  final int audioBytes;
+
+  const _AppAudioBytesUpdated(this.audioBytes);
+}
