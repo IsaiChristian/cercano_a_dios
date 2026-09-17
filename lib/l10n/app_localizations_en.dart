@@ -357,7 +357,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyDescription =>
-      'No account. No uploads. No ads. Your prayers are stored privately on this device. Uninstalling the app or losing the device can remove your history and recordings.';
+      'Appwrite securely handles your account and session. Your prayer recordings, history, and alarms are stored privately on this device and are never uploaded.';
 
   @override
   String get timezoneNote =>
@@ -629,4 +629,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get promptCategoryEvening => 'Evening';
+
+  @override
+  String get signIn => 'Sign in';
+
+  @override
+  String get createAccount => 'Create account';
+
+  @override
+  String get email => 'Email address';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get displayName => 'Your name';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get switchToCreateAccount => 'Don\'t have an account? Create one.';
+
+  @override
+  String get switchToSignIn => 'Already have an account? Sign in.';
+
+  @override
+  String get submitting => 'Please wait...';
+
+  @override
+  String get validationRequired => 'This field is required.';
+
+  @override
+  String get validationEmail => 'Please enter a valid email address.';
+
+  @override
+  String get validationPasswordLength =>
+      'Password must be at least 8 characters.';
+
+  @override
+  String get authFailureInvalidCredentials =>
+      'The email or password is incorrect.';
+
+  @override
+  String get authFailureEmailAlreadyUsed => 'This email is already in use.';
+
+  @override
+  String get authFailureInvalidInput =>
+      'Please check your information and try again.';
+
+  @override
+  String get authFailureNetwork => 'A network connection is required.';
+
+  @override
+  String get authFailureConfiguration =>
+      'We could not connect to the authentication service. Please contact support.';
+
+  @override
+  String get authFailureAccountCreatedButSignInFailed =>
+      'Your account was created, but we could not sign you in. Please try signing in now.';
+
+  @override
+  String get authFailureUnknown =>
+      'An unexpected error occurred. Please try again.';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get checkingSession => 'Checking session...';
+
+  @override
+  String get restoringSession => 'Restoring session...';
+
+  @override
+  String get openingLocalProfile => 'Opening local profile...';
+
+  @override
+  String get retrySessionCheck => 'Retry session check';
+
+  @override
+  String get invalidAppwriteConfiguration => 'Invalid Appwrite configuration';
 }

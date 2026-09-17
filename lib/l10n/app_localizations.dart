@@ -719,7 +719,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyDescription.
   ///
   /// In en, this message translates to:
-  /// **'No account. No uploads. No ads. Your prayers are stored privately on this device. Uninstalling the app or losing the device can remove your history and recordings.'**
+  /// **'Appwrite securely handles your account and session. Your prayer recordings, history, and alarms are stored privately on this device and are never uploaded.'**
   String get privacyDescription;
 
   /// No description provided for @timezoneNote.
@@ -1207,6 +1207,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Evening'**
   String get promptCategoryEvening;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccount;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get displayName;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// No description provided for @switchToCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? Create one.'**
+  String get switchToCreateAccount;
+
+  /// No description provided for @switchToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in.'**
+  String get switchToSignIn;
+
+  /// No description provided for @submitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait...'**
+  String get submitting;
+
+  /// No description provided for @validationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required.'**
+  String get validationRequired;
+
+  /// No description provided for @validationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address.'**
+  String get validationEmail;
+
+  /// No description provided for @validationPasswordLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters.'**
+  String get validationPasswordLength;
+
+  /// No description provided for @authFailureInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'The email or password is incorrect.'**
+  String get authFailureInvalidCredentials;
+
+  /// No description provided for @authFailureEmailAlreadyUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already in use.'**
+  String get authFailureEmailAlreadyUsed;
+
+  /// No description provided for @authFailureInvalidInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your information and try again.'**
+  String get authFailureInvalidInput;
+
+  /// No description provided for @authFailureNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'A network connection is required.'**
+  String get authFailureNetwork;
+
+  /// No description provided for @authFailureConfiguration.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not connect to the authentication service. Please contact support.'**
+  String get authFailureConfiguration;
+
+  /// No description provided for @authFailureAccountCreatedButSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account was created, but we could not sign you in. Please try signing in now.'**
+  String get authFailureAccountCreatedButSignInFailed;
+
+  /// No description provided for @authFailureUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred. Please try again.'**
+  String get authFailureUnknown;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @checkingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking session...'**
+  String get checkingSession;
+
+  /// No description provided for @restoringSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring session...'**
+  String get restoringSession;
+
+  /// No description provided for @openingLocalProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening local profile...'**
+  String get openingLocalProfile;
+
+  /// No description provided for @retrySessionCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry session check'**
+  String get retrySessionCheck;
+
+  /// No description provided for @invalidAppwriteConfiguration.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Appwrite configuration'**
+  String get invalidAppwriteConfiguration;
 }
 
 class _AppLocalizationsDelegate

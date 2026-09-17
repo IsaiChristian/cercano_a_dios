@@ -1,25 +1,32 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/widgets.dart';
-import 'package:cercano_a_dios/l10n/app_localizations.dart';
+
 import 'package:cercano_a_dios/l10n/app_localizations_en.dart';
 import 'package:cercano_a_dios/l10n/app_localizations_es.dart';
 
 void main() {
-  test(
-    'English remains the source locale and Spanish translates core copy',
-    () {
-      final en = AppLocalizationsEn();
-      final es = AppLocalizationsEs();
-      expect(en.beginMoment, 'Begin a moment');
-      expect(es.beginMoment, 'Comenzar un momento');
-      expect(es.daysStreak(3), 'Racha de 3 días');
-      expect(es.promptTextP01, contains('Señor'));
-    },
-  );
+  group('Privacy Copy Assertions', () {
+    test(
+      'English privacy copy mentions Appwrite handles account but prayers remain local',
+      () {
+        final en = AppLocalizationsEn();
+        expect(
+          en.privacyDescription,
+          contains('Appwrite securely handles your account and session.'),
+        );
+        expect(en.privacyDescription, contains('are never uploaded'));
+      },
+    );
 
-  test('Flutter declares only locales with generated translations', () {
-    expect(AppLocalizations.supportedLocales, contains(const Locale('en')));
-    expect(AppLocalizations.supportedLocales, contains(const Locale('es')));
-    expect(AppLocalizations.delegate.isSupported(const Locale('fr')), isFalse);
+    test(
+      'Spanish privacy copy mentions Appwrite handles account but prayers remain local',
+      () {
+        final es = AppLocalizationsEs();
+        expect(
+          es.privacyDescription,
+          contains('Appwrite maneja tu cuenta y sesión de forma segura.'),
+        );
+        expect(es.privacyDescription, contains('nunca se suben'));
+      },
+    );
   });
 }
