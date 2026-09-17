@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../failures/failure.dart';
 import '../entities/prayer.dart';
+
 abstract class PrayerRepository {
   Future<Either<Failure, List<PrayerSession>>> sessions();
   Future<Either<Failure, void>> complete(PrayerSession session);

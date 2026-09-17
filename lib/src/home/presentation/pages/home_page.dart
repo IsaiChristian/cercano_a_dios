@@ -29,7 +29,9 @@ class HomePage extends StatelessWidget {
       );
       final monday = civilDay(now).subtract(Duration(days: now.weekday - 1));
       final localizations = AppLocalizations.of(context)!;
-      final currentPath = GoRouter.of(context).routeInformationProvider.value.uri.path;
+      final currentPath = GoRouter.of(
+        context,
+      ).routeInformationProvider.value.uri.path;
 
       return Scaffold(
         appBar: AppBar(
@@ -73,7 +75,10 @@ class HomePage extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 12),
-                    Text(prompt.text, style: Theme.of(context).textTheme.bodyLarge),
+                    Text(
+                      prompt.text,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -114,7 +119,9 @@ class HomePage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(7, (i) {
-                        final date = calendarDate(monday.add(Duration(days: i)));
+                        final date = calendarDate(
+                          monday.add(Duration(days: i)),
+                        );
                         final done = progress.dates.contains(date);
                         final dayNames = [
                           localizations.monday,

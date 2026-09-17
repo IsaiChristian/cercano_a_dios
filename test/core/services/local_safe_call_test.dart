@@ -41,7 +41,8 @@ void main() {
 
       expect(result.isLeft(), true);
       result.fold(
-        (f) => expect(f.message, 'Could not save your changes. Please try again.'),
+        (f) =>
+            expect(f.message, 'Could not save your changes. Please try again.'),
         (_) => fail('Should be Left'),
       );
     });

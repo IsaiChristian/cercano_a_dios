@@ -37,7 +37,9 @@ class _HistoryPageState extends State<HistoryPage> {
     bloc: app,
     builder: (context, state) {
       final localizations = AppLocalizations.of(context)!;
-      final currentPath = GoRouter.of(context).routeInformationProvider.value.uri.path;
+      final currentPath = GoRouter.of(
+        context,
+      ).routeInformationProvider.value.uri.path;
 
       return Scaffold(
         appBar: AppBar(

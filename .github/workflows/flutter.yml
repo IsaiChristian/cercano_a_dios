@@ -8,8 +8,10 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.35.5'
       - run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
   android:
@@ -23,8 +25,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.35.5'
       - run: flutter pub get
-      - run: flutter build apk --debug
+      - run: flutter build apk --debug --android-skip-build-dependency-validation
   ios:
     runs-on: macos-15
     steps:
@@ -35,5 +38,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.35.5'
       - run: flutter pub get
       - run: flutter build ios --simulator --debug

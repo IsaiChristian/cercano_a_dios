@@ -150,7 +150,9 @@ void main() {
 
     test('currentUser returns Right(AuthUser) when active session', () async {
       await fakeService.createEmailPasswordSession(
-          email: 'test@example.com', password: 'password');
+        email: 'test@example.com',
+        password: 'password',
+      );
       final result = await repository.currentUser();
       expect(result.isRight(), isTrue);
       result.fold((l) => fail('Should be right'), (r) {
@@ -162,39 +164,47 @@ void main() {
 
     test('currentUser maps unknown AppwriteException to Left', () async {
       fakeService.setNextException(
-          AppwriteException('Server error', 500, 'server_error'));
+        AppwriteException('Server error', 500, 'server_error'),
+      );
       final result = await repository.currentUser();
       expect(result.isLeft(), isTrue);
-      result.fold(
-        (l) {
-          expect(l, isA<AuthFailure>());
-          expect((l as AuthFailure).reason, AuthFailureReason.network);
-        },
-        (r) => fail('Should be left'),
-      );
+      result.fold((l) {
+        expect(l, isA<AuthFailure>());
+        expect((l as AuthFailure).reason, AuthFailureReason.network);
+      }, (r) => fail('Should be left'));
     });
 
     test('signInWithEmail success', () async {
       final result = await repository.signInWithEmail(
-          email: 'test@example.com', password: 'password');
+        email: 'test@example.com',
+        password: 'password',
+      );
       expect(result.isRight(), isTrue);
     });
 
     test('signInWithEmail maps invalid credentials', () async {
-      fakeService.setNextException(AppwriteException(
-          'Invalid creds', 401, 'user_invalid_credentials'));
+      fakeService.setNextException(
+        AppwriteException('Invalid creds', 401, 'user_invalid_credentials'),
+      );
       final result = await repository.signInWithEmail(
-          email: 'test@example.com', password: 'password');
+        email: 'test@example.com',
+        password: 'password',
+      );
       result.fold(
         (l) => expect(
-            (l as AuthFailure).reason, AuthFailureReason.invalidCredentials),
+          (l as AuthFailure).reason,
+          AuthFailureReason.invalidCredentials,
+        ),
         (r) => fail('Should be left'),
       );
     });
 
     test('signUpWithEmail success', () async {
       final result = await repository.signUpWithEmail(
-          email: 'new@example.com', password: 'password', name: 'New');
+        email: 'new@example.com',
+        password: 'password',
+        name: 'New',
+      );
       expect(result.isRight(), isTrue);
       result.fold((l) => fail('Should be right'), (r) {
         expect(r.email, 'new@example.com');
@@ -208,21 +218,25 @@ void main() {
       final repo = AppwriteAuthRepository(partialFailureService);
 
       final result = await repo.signUpWithEmail(
-          email: 'test@example.com', password: 'password', name: 'Test');
-      expect(result.isLeft(), isTrue);
-      result.fold(
-        (l) {
-          expect(l, isA<AuthFailure>());
-          expect((l as AuthFailure).reason,
-              AuthFailureReason.accountCreatedButSignInFailed);
-        },
-        (r) => fail('Should be left'),
+        email: 'test@example.com',
+        password: 'password',
+        name: 'Test',
       );
+      expect(result.isLeft(), isTrue);
+      result.fold((l) {
+        expect(l, isA<AuthFailure>());
+        expect(
+          (l as AuthFailure).reason,
+          AuthFailureReason.accountCreatedButSignInFailed,
+        );
+      }, (r) => fail('Should be left'));
     });
 
     test('signOut success', () async {
       await fakeService.createEmailPasswordSession(
-          email: 'test@example.com', password: 'password');
+        email: 'test@example.com',
+        password: 'password',
+      );
       final result = await repository.signOut();
       expect(result, const Right(null));
       final current = await repository.currentUser();
@@ -236,7 +250,8 @@ void main() {
 
     test('configuration issue mapping', () async {
       fakeService.setNextException(
-          AppwriteException('Project not found', 400, 'project_not_found'));
+        AppwriteException('Project not found', 400, 'project_not_found'),
+      );
       final result = await repository.currentUser();
       result.fold(
         (l) =>
@@ -249,8 +264,10 @@ void main() {
 
 class _PartialFailureFakeService extends FakeAppwriteAuthService {
   @override
-  Future<models.Session> createEmailPasswordSession(
-      {required String email, required String password}) async {
+  Future<models.Session> createEmailPasswordSession({
+    required String email,
+    required String password,
+  }) async {
     throw AppwriteException('Failed to create session', 500, 'server_error');
   }
 }
