@@ -17,6 +17,8 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     on<HistoryLoadRequested>(_onLoadRequested);
     on<HistorySessionCompleted>(_onSessionCompleted);
     on<HistorySessionDeleted>(_onSessionDeleted);
+    on<HistoryAudioDeleted>(_onAudioDeleted);
+    on<HistoryAllAudioDeleted>(_onAllAudioDeleted);
   }
 
   Future<void> loadSessions() {
@@ -34,6 +36,18 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   Future<void> deleteSession(String id) {
     final result = Completer<void>();
     add(HistorySessionDeleted(id, result));
+    return result.future;
+  }
+
+  Future<void> syncAudioDeleted(String id) {
+    final result = Completer<void>();
+    add(HistoryAudioDeleted(id, result));
+    return result.future;
+  }
+
+  Future<void> syncAllAudioDeleted() {
+    final result = Completer<void>();
+    add(HistoryAllAudioDeleted(result));
     return result.future;
   }
 
@@ -99,5 +113,29 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
         event.result?.complete();
       },
     );
+  }
+
+  Future<void> _onAudioDeleted(
+    HistoryAudioDeleted event,
+    Emitter<HistoryState> emit,
+  ) async {
+    final sessionsResult = await repository.sessions();
+    sessionsResult.fold(
+      (failure) => emit(state.copyWith(error: failure.message)),
+      (sessions) => emit(state.copyWith(sessions: sessions, clearError: true)),
+    );
+    event.result?.complete();
+  }
+
+  Future<void> _onAllAudioDeleted(
+    HistoryAllAudioDeleted event,
+    Emitter<HistoryState> emit,
+  ) async {
+    final sessionsResult = await repository.sessions();
+    sessionsResult.fold(
+      (failure) => emit(state.copyWith(error: failure.message)),
+      (sessions) => emit(state.copyWith(sessions: sessions, clearError: true)),
+    );
+    event.result?.complete();
   }
 }

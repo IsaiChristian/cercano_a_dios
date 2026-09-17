@@ -238,10 +238,16 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     Emitter<AppState> emit,
   ) async {
     final success = await historyBloc.completeSession(event.session);
+    if (success) {
+      await audioBloc.loadAudioBytes();
+    }
+    final error = historyBloc.state.error ?? audioBloc.state.error;
     emit(
       state.copyWith(
         sessions: historyBloc.state.sessions,
-        error: historyBloc.state.error,
+        audioBytes: audioBloc.state.audioBytes,
+        error: error,
+        clearError: error == null,
       ),
     );
     event.result?.complete(success);
@@ -251,11 +257,18 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppSessionDeleted event,
     Emitter<AppState> emit,
   ) async {
+    if (audioBloc.state.playingSessionId == event.id) {
+      await audioBloc.stopPlayback();
+    }
     await historyBloc.deleteSession(event.id);
+    await audioBloc.loadAudioBytes();
+    final error = historyBloc.state.error ?? audioBloc.state.error;
     emit(
       state.copyWith(
         sessions: historyBloc.state.sessions,
-        error: historyBloc.state.error,
+        audioBytes: audioBloc.state.audioBytes,
+        error: error,
+        clearError: error == null,
       ),
     );
     event.result?.complete();
@@ -266,10 +279,14 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     Emitter<AppState> emit,
   ) async {
     await audioBloc.deleteAudio(event.id);
+    await historyBloc.syncAudioDeleted(event.id);
+    final error = audioBloc.state.error ?? historyBloc.state.error;
     emit(
       state.copyWith(
+        sessions: historyBloc.state.sessions,
         audioBytes: audioBloc.state.audioBytes,
-        error: audioBloc.state.error,
+        error: error,
+        clearError: error == null,
       ),
     );
     event.result?.complete();
@@ -279,14 +296,27 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppAllAudioDeleted event,
     Emitter<AppState> emit,
   ) async {
-    await audioBloc.deleteAllAudio(state.sessions);
-    emit(
-      state.copyWith(
-        audioBytes: audioBloc.state.audioBytes,
-        error: audioBloc.state.error,
-      ),
+    final sessionsResult = await repository.sessions();
+    await sessionsResult.fold(
+      (failure) async {
+        _emitError(emit, failure);
+        event.result?.complete();
+      },
+      (freshSessions) async {
+        await audioBloc.deleteAllAudio(freshSessions);
+        await historyBloc.syncAllAudioDeleted();
+        final error = audioBloc.state.error ?? historyBloc.state.error;
+        emit(
+          state.copyWith(
+            sessions: historyBloc.state.sessions,
+            audioBytes: audioBloc.state.audioBytes,
+            error: error,
+            clearError: error == null,
+          ),
+        );
+        event.result?.complete();
+      },
     );
-    event.result?.complete();
   }
 
   Future<void> _onReminderSaved(

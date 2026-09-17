@@ -55,7 +55,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     return result.future;
   }
 
-  Future<void> deleteAllAudio(List<PrayerSession> sessions) {
+  Future<void> deleteAllAudio([List<PrayerSession>? sessions]) {
     final result = Completer<void>();
     add(AudioAllDeleted(sessions, result));
     return result.future;
@@ -124,7 +124,11 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     try {
       await device.stopPlayback();
       final deleteResult = await repository.deleteAudio(event.id);
-      deleteResult.fold((failure) => _emitError(emit, failure), (_) {});
+      String? error;
+      deleteResult.fold((failure) {
+        error = failure.message;
+        _emitError(emit, failure);
+      }, (_) {});
       final bytes = await storage.audioBytes();
       emit(
         state.copyWith(
@@ -132,7 +136,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           isPlaying: false,
           clearPlaying: true,
           busy: false,
-          clearError: true,
+          error: error,
+          clearError: error == null,
         ),
       );
       event.result?.complete();
@@ -150,9 +155,27 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     emit(state.copyWith(busy: true));
     try {
       await device.stopPlayback();
-      for (final session in event.sessions) {
+      List<PrayerSession> targetSessions = event.sessions ?? [];
+      if (event.sessions == null) {
+        final sessionsResult = await repository.sessions();
+        var readFailed = false;
+        sessionsResult.fold((failure) {
+          _emitError(emit, failure);
+          readFailed = true;
+        }, (sessions) => targetSessions = sessions);
+        if (readFailed) {
+          emit(state.copyWith(busy: false));
+          event.result?.complete();
+          return;
+        }
+      }
+      String? error;
+      for (final session in targetSessions) {
         final deleteResult = await repository.deleteAudio(session.id);
-        deleteResult.fold((failure) => _emitError(emit, failure), (_) {});
+        deleteResult.fold((failure) {
+          error = failure.message;
+          _emitError(emit, failure);
+        }, (_) {});
       }
       final bytes = await storage.audioBytes();
       emit(
@@ -161,7 +184,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           isPlaying: false,
           clearPlaying: true,
           busy: false,
-          clearError: true,
+          error: error,
+          clearError: error == null,
         ),
       );
       event.result?.complete();

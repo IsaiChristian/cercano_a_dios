@@ -23,3 +23,16 @@ class HistorySessionDeleted extends HistoryEvent {
 
   const HistorySessionDeleted(this.id, [this.result]);
 }
+
+class HistoryAudioDeleted extends HistoryEvent {
+  final String id;
+  final Completer<void>? result;
+
+  const HistoryAudioDeleted(this.id, [this.result]);
+}
+
+class HistoryAllAudioDeleted extends HistoryEvent {
+  final Completer<void>? result;
+
+  const HistoryAllAudioDeleted([this.result]);
+}
