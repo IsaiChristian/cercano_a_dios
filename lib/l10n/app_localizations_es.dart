@@ -361,7 +361,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyDescription =>
-      'Sin cuenta. Sin cargas. Sin anuncios. Tus oraciones se guardan de forma privada en este dispositivo. Desinstalar la app o perder el dispositivo puede borrar tu historial y tus grabaciones.';
+      'Appwrite maneja tu cuenta y sesión de forma segura. Tus grabaciones de oración, historial y alarmas se guardan de forma privada en este dispositivo y nunca se suben.';
 
   @override
   String get timezoneNote =>
@@ -633,4 +633,89 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get promptCategoryEvening => 'Noche';
+
+  @override
+  String get signIn => 'Iniciar sesión';
+
+  @override
+  String get createAccount => 'Crear cuenta';
+
+  @override
+  String get email => 'Correo electrónico';
+
+  @override
+  String get password => 'Contraseña';
+
+  @override
+  String get displayName => 'Tu nombre';
+
+  @override
+  String get showPassword => 'Mostrar contraseña';
+
+  @override
+  String get hidePassword => 'Ocultar contraseña';
+
+  @override
+  String get switchToCreateAccount => '¿No tienes cuenta? Crea una.';
+
+  @override
+  String get switchToSignIn => '¿Ya tienes cuenta? Inicia sesión.';
+
+  @override
+  String get submitting => 'Por favor espera...';
+
+  @override
+  String get validationRequired => 'Este campo es obligatorio.';
+
+  @override
+  String get validationEmail => 'Por favor ingresa un correo válido.';
+
+  @override
+  String get validationPasswordLength =>
+      'La contraseña debe tener al menos 8 caracteres.';
+
+  @override
+  String get authFailureInvalidCredentials =>
+      'El correo o la contraseña son incorrectos.';
+
+  @override
+  String get authFailureEmailAlreadyUsed => 'Este correo ya está en uso.';
+
+  @override
+  String get authFailureInvalidInput =>
+      'Por favor revisa tu información e intenta de nuevo.';
+
+  @override
+  String get authFailureNetwork => 'Se requiere una conexión de red.';
+
+  @override
+  String get authFailureConfiguration =>
+      'No pudimos conectar con el servicio de autenticación. Contacta a soporte.';
+
+  @override
+  String get authFailureAccountCreatedButSignInFailed =>
+      'Tu cuenta fue creada, pero no pudimos iniciar sesión. Intenta iniciar sesión ahora.';
+
+  @override
+  String get authFailureUnknown =>
+      'Ocurrió un error inesperado. Por favor intenta de nuevo.';
+
+  @override
+  String get signOut => 'Cerrar sesión';
+
+  @override
+  String get checkingSession => 'Verificando sesión...';
+
+  @override
+  String get restoringSession => 'Restaurando sesión...';
+
+  @override
+  String get openingLocalProfile => 'Abriendo perfil local...';
+
+  @override
+  String get retrySessionCheck => 'Reintentar verificación de sesión';
+
+  @override
+  String get invalidAppwriteConfiguration =>
+      'Configuración de Appwrite inválida';
 }
