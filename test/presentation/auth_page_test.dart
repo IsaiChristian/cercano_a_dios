@@ -117,12 +117,8 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-
-
     await tester.tap(find.byIcon(Icons.visibility));
     await tester.pumpAndSettle();
-
-
   });
 
   testWidgets('validation prevents dispatching event with invalid inputs', (

@@ -5,7 +5,7 @@ Preserved feature-scoped BLoCs (HistoryBloc, AudioBloc, RemindersBloc) from main
 and Equatable entities/failures/BLoC states from PR14. Added RemindersState Equatable
 regression test. Verification: dart format, dart analyze, flutter test passed.
 
-R01–R04 implemented and submitted via pull requests.
+R01–R05 implemented (R01–R04 merged into main; R05 implemented).
 - R01: `codex/r01-auth-integration` (`f514e2a`) merged (PR #16). Complete authentication
   and per-user app integration: bootstrap configuration, reactive routing guards,
   settings sign-out, gated alarm navigation, legacy anonymous data preservation,
@@ -14,14 +14,20 @@ R01–R04 implemented and submitted via pull requests.
   AppBloc audio mutation synchronization, AudioBloc/HistoryBloc synchronization helpers,
   quota enforcement, committed audio preservation, and 16 new/expanded regression tests
   (141/141 passed). Details: [`R02-AUDIO-STATE-SYNC.md`](R02-AUDIO-STATE-SYNC.md).
-- R03: `codex/r03-audio-delete-results` (`969a5e7`) submitted (PR #18).
+- R03: `codex/r03-audio-delete-results` (`969a5e7`) merged (PR #18, `9c8aab4`).
   Preserve failed and partially completed audio-delete results via `AudioDeleteResult`,
   retained `AudioState.lastDeleteResult` and `errorMessage`, `AudioErrorCleared`,
-  and `retryFailedDeletions()` retry mechanism. Details: [`R03-AUDIO-DELETE-RESULTS.md`](R03-AUDIO-DELETE-RESULTS.md).
-- R04: `codex/r04-locale-persistence` (`d4f1ca9`) submitted (PR #19).
+  and `retryFailedDeletions()` retry mechanism (160/160 passed). Details: [`R03-AUDIO-DELETE-RESULTS.md`](R03-AUDIO-DELETE-RESULTS.md).
+- R04: `codex/r04-locale-persistence` (`d4f1ca9`) merged (PR #19, `5dadb05`).
   Honor device locale (Spanish/English/fallback) on first launch, synchronous persistence
   via `LocalStorageService.writeLanguageCodeSync()`, SettingsPage dropdown wiring, and
-  full persistence/refresh integration. Details: [`R04-LOCALE-PERSISTENCE.md`](R04-LOCALE-PERSISTENCE.md).
+  full persistence/refresh integration (182/182 passed). Details: [`R04-LOCALE-PERSISTENCE.md`](R04-LOCALE-PERSISTENCE.md).
+- R05: `codex/r05-formatting-toolchain` implemented locally.
+  Pinned Flutter 3.35.5 across CI jobs (.github/workflows/flutter.yml), added `dart format --output=none --set-exit-if-changed lib test` CI check,
+  upgraded AGP to 8.11.1 in android/settings.gradle.kts and added `--android-skip-build-dependency-validation`,
+  and normalized formatting across 11 files with flow-control braces.
+  Verification: dart format clean (0 changed), flutter analyze clean (0 issues), 182/182 tests passed.
+  Details: [`R05-FORMATTING-TOOLCHAIN.md`](R05-FORMATTING-TOOLCHAIN.md).
 
 IMPLEMENTATION-REVIEW complete locally; ownership released. Base: main `4d8e66e`.
 Created [22 prioritized review tasks](../docs/IMPLEMENTATION_REVIEW_TASKS.md) with

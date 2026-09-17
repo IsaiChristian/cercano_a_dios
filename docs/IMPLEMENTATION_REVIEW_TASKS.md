@@ -74,7 +74,7 @@ Passing component tests does not validate the full application or native device 
   English, Spanish, unsupported locale, and persisted override.
   **Implemented:** `codex/r04-locale-persistence` (PR #19). Details: [`R04-LOCALE-PERSISTENCE.md`](../agent-comms/R04-LOCALE-PERSISTENCE.md).
 
-- [ ] **R05 · P3 · Make formatting and toolchain validation reproducible.**
+- [x] **R05 · P3 · Make formatting and toolchain validation reproducible.**
   **Evidence:** `.github/workflows/flutter.yml:8`, `:23`, `:35` use unpinned
   stable Flutter and run no formatting check. The read-only formatter check
   currently reports 13 files.
@@ -91,6 +91,7 @@ Passing component tests does not validate the full application or native device 
   `test/data/appwrite_auth_repository_test.dart`, `test/domain/progress_test.dart`,
   `test/domain/reminder_test.dart`, `test/presentation/auth_page_test.dart`,
   `test/src/app/bloc/app_state_test.dart`.
+  **Implemented:** `codex/r05-formatting-toolchain`. Pinned Flutter 3.35.5 across CI jobs, added `dart format --output=none --set-exit-if-changed lib test` CI gate, updated AGP to 8.11.1 with `--android-skip-build-dependency-validation` to resolve CI build conflicts, and normalized formatting across all 11 files with flow-control braces. Details: [`R05-FORMATTING-TOOLCHAIN.md`](../agent-comms/R05-FORMATTING-TOOLCHAIN.md).
 
 - [ ] **R06 · P3 · Reconcile product/setup documentation with the actual checkout.**
   **Evidence:** `README.md:20` still says no account is included; its run section
