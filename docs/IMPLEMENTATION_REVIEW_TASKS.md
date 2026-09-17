@@ -92,7 +92,7 @@ Passing component tests does not validate the full application or native device 
   `test/domain/reminder_test.dart`, `test/presentation/auth_page_test.dart`,
   `test/src/app/bloc/app_state_test.dart`.
 
-- [ ] **R06 · P3 · Reconcile product/setup documentation with the actual checkout.**
+- [x] **R06 · P3 · Reconcile product/setup documentation with the actual checkout.**
   **Evidence:** `README.md:20` still says no account is included; its run section
   describes generating an untracked lockfile even though `pubspec.lock` is tracked.
   `docs/VALIDATION.md` mixes old no-tests-run claims with newer results, while
@@ -102,6 +102,7 @@ Passing component tests does not validate the full application or native device 
   actual verification results and remaining device gaps. Include auth configuration
   and fake-mode instructions when R01 lands. Remove contradictory current-status
   claims while keeping historical evidence explicitly dated.
+  **Implemented:** Reconciled `README.md`, `docs/VALIDATION.md`, and `docs/IMPLEMENTATION_PLAN.md` with current Flutter 3.35.5 / Dart 3.9.2 toolchain, 182 passed automated tests, landed features R01–R04, and remaining physical device release gates. Details: [`R06-DOCUMENTATION-RECONCILIATION.md`](../agent-comms/R06-DOCUMENTATION-RECONCILIATION.md).
 
 - [ ] **R07 · P1 · Make refresh failures deterministic across child BLoCs.**
   **Evidence:** `lib/src/app/bloc/app_bloc.dart:188`;

@@ -4,19 +4,28 @@
 
 - Follow the layered architecture skill: feature UI, event-driven BLoCs with BlocBuilder/BlocListener, provider DI, go_router and Either failures.
 - Reference inspected at commit 95e769d4258da2ceeee151dd1735a7e6d340b26a.
-- English first, matching the planning conversation. Prompt content is centralized; interface localization remains a follow-up.
-- SQLite metadata, private AAC recordings, native audio/alarm bridges. No AI, account, or network runtime dependency.
+- English and Spanish supported with Flutter ARB localizations; honors device locale and persists settings choice.
+- SQLite metadata, private AAC recordings, native audio/alarm bridges. User accounts are supported for local profile isolation (via Appwrite or an offline fake backend); no AI, speech transcription, or prayer upload dependency.
 - Android API 24; iOS 15 with explicit reminder mode, iOS 26 AlarmKit.
 - Build against the available Flutter 3.35.5 API baseline; validate stable-version upgrades in CI before claiming broader toolchain compatibility.
 
-## Work sequence and current status
+## Work sequence and implementation history
+
+### Initial plan snapshot (2026-09-15)
 
 1. Implemented in source: date-based streaks, milestones, next-reminder display and idempotent completion.
 2. Implemented in source: SQLite schema v1, audio references, orphan cleanup, deletion and reset.
 3. Implemented in source: native recording/playback, permissions, Android alarms, iOS reminders and an SDK-gated AlarmKit adapter. Native runtime validation remains open.
 4. Implemented in source: onboarding, Today, prayer/review, reminders, history, progress and settings.
-5. Written: 19 Dart tests using Flutter's test framework for domain, persistence, session state, and small-screen UI. Execution is blocked by the local runtime.
-6. Open: Flutter analyze/test, dependency lockfile generation, Android debug APK, iOS simulator build, visual QA and physical-device measurements. Build workflow is included but has not been dispatched.
+5. Written: 19 Dart tests using Flutter's test framework for domain, persistence, session state, and small-screen UI.
+
+### Integrated implementation review tasks (2026-09-17)
+
+- **R01 (PR #16)**: Complete authentication and per-user app integration with Appwrite/Fake backends, reactive routing guards, settings sign-out, native alarm validation, and isolated profiles.
+- **R02 (PR #17)**: Keep history and audio storage totals consistent across mutations (session completion, single and bulk audio deletion).
+- **R03 (PR #18)**: Resilient audio deletion outcome reporting (`AudioDeleteResult`), partial failure preservation, retry, and dismissal.
+- **R04 (PR #19)**: Honor device locale on first launch and persist explicit language choice in settings across restarts.
+- **Current test baseline**: 182 automated unit, widget, and integration tests passing on Flutter 3.35.5 and Dart 3.9.2 (`flutter analyze --no-pub` clean).
 
 ## Implementation choices to verify
 
@@ -36,7 +45,7 @@
 
 ## Environment constraints
 
-The installed Dart 3.9.2 process aborts when the execution sandbox rejects its CPU sysctl call. Xcode 16.4 cannot compile AlarmKit; simulator services are inaccessible in this execution environment. These are validation blockers, not passing checks. Continue source work and provide reproducible CI/local checks; do not claim a tested mobile build until those checks run.
+The toolchain is verified with Flutter 3.35.5 and Dart 3.9.2 running static analysis (`flutter analyze --no-pub` clean) and automated tests (182 tests passing). Physical device compilation and hardware validation (Android APK distribution signing, Xcode 26+ AlarmKit compilation, and physical device alarm delivery) remain the active validation gates.
 
 ## Localization
 
