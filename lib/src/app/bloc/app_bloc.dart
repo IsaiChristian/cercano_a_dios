@@ -218,6 +218,15 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         remindersBloc.loadReminders(),
         audioBloc.loadAudioBytes(),
       ]);
+
+      final historyError = historyBloc.state.error;
+      final remindersError = remindersBloc.state.error;
+      final audioError = audioBloc.state.error;
+
+      final hasError =
+          historyError != null || remindersError != null || audioError != null;
+      final errorMessage = historyError ?? remindersError ?? audioError;
+
       emit(
         state.copyWith(
           locale: resolvedLocale,
@@ -225,7 +234,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           reminders: remindersBloc.state.reminders,
           audioBytes: audioBloc.state.audioBytes,
           loading: false,
-          clearError: true,
+          error: errorMessage,
+          clearError: !hasError,
         ),
       );
       event.result?.complete();
