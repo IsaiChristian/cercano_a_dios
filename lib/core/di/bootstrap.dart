@@ -28,8 +28,8 @@ class AppBootstrapResult {
     required this.appFactory,
     required this.authBloc,
     required this.appSessionBloc,
-    StreamSubscription<AuthState>? authSubscription,
-  }) : _authSubscription = authSubscription;
+    this._authSubscription,
+  });
 
   /// Disposes scoped bloc resources and listeners idempotently.
   Future<void> dispose() async {
