@@ -2,20 +2,23 @@
 
 A Flutter Catholic prayer companion with scheduled alarms, private voice recordings, a daily streak, and personal milestones.
 
-**Status: first implementation, awaiting Flutter build and device validation.** No mobile binary has been produced yet.
+**Status: verified core implementation (182 automated tests passing), awaiting native packaging and physical device validation.** No production mobile binary has been distributed yet.
 
 ## Included
 
+- User accounts with local profile isolation (`profiles/<hex_user_id>/`) using Appwrite authentication or an offline test backend, with reactive routing guards, settings sign-out, native alarm gating, and legacy anonymous data preservation.
 - Today screen and 20 original draft Catholic prayer prompts.
 - Record, review, re-record, save, play, and delete private AAC audio.
 - Silent reflection, local SQLite history, and idempotent completion.
 - Current/best streak, a weekly progress strip, and six personal badges.
 - Up to five weekly alarm schedules, permission states, Stop, Snooze, and test alarms.
-- English and Spanish UI translations using Flutter ARB resources; the device locale selects the language and English remains the fallback.
+- English and Spanish UI translations using Flutter ARB resources; honors device locale on first launch and persists explicit language choice in settings.
+- Immediate synchronization of history and audio storage totals upon recorded session completion and audio deletion.
+- Resilient audio deletion with domain outcome tracking (`AudioDeleteResult`), partial failure retention, retry, and dismissal.
 - Android native alarm service; iOS notification reminders; conditional iOS 26 AlarmKit adapter.
 - Storage usage, audio-only deletion, and full data reset.
 
-No account, AI call, speech transcription, analytics, or prayer upload is included. Native audio capture does not verify speech content.
+No AI call, speech transcription, analytics, or prayer upload is included. Native audio capture does not verify speech content. User accounts are supported for local profile isolation (via Appwrite or an offline fake backend); prayer audio and journal data remain strictly on-device in isolated profile directories.
 
 ## Architecture
 
@@ -36,19 +39,30 @@ Dependency injection uses provider/BlocProvider, routing uses go_router, and sta
 
 ## Run
 
-Install a supported Flutter stable SDK with Dart 3.9 or later. Android requires JDK 17 and the Android SDK. iOS requires Xcode and CocoaPods; use Xcode 26 or later to compile the AlarmKit branch. With older Xcode, that branch is excluded and the build offers reminder mode.
+Tested on Flutter 3.35.5 (channel stable) and Dart 3.9.2. Android requires JDK 17 and the Android SDK. iOS requires Xcode and CocoaPods; use Xcode 26 or later to compile the AlarmKit branch. With older Xcode, that branch is excluded and the build offers reminder mode.
+
+The dependency lockfile (`pubspec.lock`) is tracked in version control.
 
 From this directory:
 
 ```sh
 flutter pub get
 flutter gen-l10n
-flutter analyze
-flutter test
-flutter run
+flutter analyze --no-pub
+flutter test --no-pub
 ```
 
-`flutter pub get` will generate `pubspec.lock`; commit it after dependency resolution and validation. It has not been fabricated or copied from the reference app.
+To run the app locally, select an authentication backend:
+
+```sh
+# Option A: Offline / Fake Auth Backend (recommended for development and testing)
+flutter run --dart-define=AUTH_BACKEND=fake
+
+# Option B: Appwrite Authentication Backend (requires a running Appwrite instance)
+flutter run \
+  --dart-define=APPWRITE_ENDPOINT=https://your-appwrite-server/v1 \
+  --dart-define=APPWRITE_PROJECT_ID=your_project_id
+```
 
 ```sh
 flutter build apk --debug
@@ -94,7 +108,7 @@ Cercano a Dios isolates all journal data, SQLite databases, and audio recordings
 
 ## Tests and validation
 
-The actual tests are **Dart tests using `flutter_test`**, under `test/`. They cover date boundaries, duplicate saves, file cleanup, deletion semantics, microphone denial, save retry, interruption, authentication routing, profile lifecycle, and integration flows. Native hardware behavior requires the device checklist.
+The test suite consists of **182 automated Dart tests** using `flutter_test` under `test/` (100% pass rate). They cover date boundaries, duplicate saves, file cleanup, deletion semantics, microphone denial, save retry, interruption, authentication routing, profile lifecycle, storage/history mutation synchronization, audio delete results and retry, device locale resolution and persistence, and full-app integration flows. Native hardware behavior requires the device checklist.
 
 See [validation status](docs/VALIDATION.md), [implementation plan](docs/IMPLEMENTATION_PLAN.md), and [PRD](docs/PRD.md).
 
