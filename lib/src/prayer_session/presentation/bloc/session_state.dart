@@ -10,7 +10,7 @@ enum SessionPhase {
   complete,
 }
 
-class SessionState {
+class SessionState extends Equatable {
   final SessionPhase phase;
   final int seconds;
   final double level;
@@ -22,4 +22,7 @@ class SessionState {
     this.level = 0,
     this.error,
   });
+
+  @override
+  List<Object?> get props => [phase, seconds, level, error];
 }

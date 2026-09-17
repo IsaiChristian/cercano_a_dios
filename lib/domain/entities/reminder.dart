@@ -1,4 +1,6 @@
-class Reminder {
+import 'package:equatable/equatable.dart';
+
+class Reminder extends Equatable {
   final int id;
   final int hour;
   final int minute;
@@ -23,4 +25,7 @@ class Reminder {
     enabled: enabled ?? this.enabled,
     status: status ?? this.status,
   );
+
+  @override
+  List<Object?> get props => [id, hour, minute, weekdays, enabled, status];
 }

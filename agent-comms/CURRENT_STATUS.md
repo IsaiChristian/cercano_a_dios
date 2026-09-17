@@ -1,5 +1,10 @@
 # Current Agent Status
 
+PR14-CONFLICT-RESOLVED complete; origin/main (4d8e66e) merged into j04-local-profiles.
+Preserved feature-scoped BLoCs (HistoryBloc, AudioBloc, RemindersBloc) from main
+and Equatable entities/failures/BLoC states from PR14. Added RemindersState Equatable
+regression test. Verification: dart format, dart analyze, flutter test passed.
+
 REFACTOR-FEATURE-BLOCS complete locally; ownership released.
 Branch: `refactor-feature-blocs` (worktree `.worktrees/refactor-feature-blocs`) from `j04-local-profiles` (`c906822a`).
 Extracted feature-scoped BLoCs (`HistoryBloc`, `AudioBloc`, `RemindersBloc`) from the `AppBloc`
