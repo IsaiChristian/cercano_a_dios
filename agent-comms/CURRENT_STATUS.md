@@ -1,5 +1,13 @@
 # Current Agent Status
 
+REFACTOR-FEATURE-BLOCS complete locally; ownership released.
+Branch: `refactor-feature-blocs` (worktree `.worktrees/refactor-feature-blocs`) from `j04-local-profiles` (`c906822a`).
+Extracted feature-scoped BLoCs (`HistoryBloc`, `AudioBloc`, `RemindersBloc`) from the `AppBloc`
+god object (~420 lines, 16 handlers). `AppBloc` is now a thin coordinator delegating to the feature
+BLoCs and aggregating state for top-level consumers. Reminders UI directly consumes `RemindersBloc`.
+Verification: formatting, `dart analyze` (clean), 18 focused tests (6 history, 5 audio, 7 reminders),
+and full test suite (125 tests) passed; `git diff --check` passed. Details: [`REFACTOR-FEATURE-BLOCS.md`](REFACTOR-FEATURE-BLOCS.md).
+
 J04-LOCAL-PROFILES complete locally; ownership released.
 Branch: `j04-local-profiles` from main `34c9a44`.
 Implemented user-scoped local profile isolation under `profiles/<encodedUserId>` with

@@ -139,6 +139,9 @@ class _PrayerAppState extends State<PrayerApp> with WidgetsBindingObserver {
     providers: [
       Provider<DeviceServices>.value(value: widget.app.device),
       BlocProvider<AppBloc>.value(value: widget.app),
+      BlocProvider<RemindersBloc>.value(value: widget.app.remindersBloc),
+      BlocProvider<AudioBloc>.value(value: widget.app.audioBloc),
+      BlocProvider<HistoryBloc>.value(value: widget.app.historyBloc),
     ],
     child: BlocBuilder<AppBloc, AppState>(
       bloc: widget.app,

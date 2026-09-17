@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,19 +12,33 @@ import '../../../../domain/entities/prayer.dart';
 import '../../../../domain/failures/failure.dart';
 import '../../../../domain/repositories/prayer_repository.dart';
 import '../../../../domain/use_cases/calculate_progress.dart';
+import '../../audio/presentation/bloc/audio_bloc.dart';
+import '../../history/presentation/bloc/history_bloc.dart';
+import '../../reminders/presentation/bloc/reminders_bloc.dart';
+
+export '../../audio/presentation/bloc/audio_bloc.dart';
+export '../../history/presentation/bloc/history_bloc.dart';
+export '../../reminders/presentation/bloc/reminders_bloc.dart';
 
 part 'app_state.dart';
 part 'app_event.dart';
 
 /// Application coordinator for journal state and cross-feature commands.
 ///
-/// All state changes are driven by [AppEvent]s so feature views only rebuild
-/// from immutable [AppState] snapshots via BlocBuilder.
+/// Delegates feature concerns to [RemindersBloc], [AudioBloc], and [HistoryBloc].
 class AppBloc extends Bloc<AppEvent, AppState> {
   final PrayerRepository repository;
   final DeviceServices device;
   final LocalStorageService storage;
   final Future<void> Function()? closeResources;
+
+  final RemindersBloc remindersBloc;
+  final AudioBloc audioBloc;
+  final HistoryBloc historyBloc;
+
+  StreamSubscription<RemindersState>? _remindersSub;
+  StreamSubscription<AudioState>? _audioSub;
+  StreamSubscription<HistoryState>? _historySub;
 
   AppBloc({
     required this.repository,
@@ -31,11 +46,38 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     required this.storage,
     bool onboardingComplete = false,
     this.closeResources,
-  }) : super(AppState(loading: true, onboardingComplete: onboardingComplete)) {
+    RemindersBloc? remindersBloc,
+    AudioBloc? audioBloc,
+    HistoryBloc? historyBloc,
+  }) : remindersBloc =
+           remindersBloc ??
+           RemindersBloc(repository: repository, device: device),
+       audioBloc =
+           audioBloc ??
+           AudioBloc(device: device, storage: storage, repository: repository),
+       historyBloc = historyBloc ?? HistoryBloc(repository: repository),
+       super(AppState(loading: true, onboardingComplete: onboardingComplete)) {
     on<AppLocaleChanged>(_onLocaleChanged);
     on<AppRefreshRequested>(_onRefresh);
     on<AppErrorReported>(_onErrorReported);
     on<AppOnboardingCompleted>(_onOnboardingCompleted);
+    on<AppDataReset>(_onDataReset);
+    on<_AppSessionsUpdated>((e, emit) {
+      if (state.sessions != e.sessions) {
+        emit(state.copyWith(sessions: e.sessions));
+      }
+    });
+    on<_AppRemindersUpdated>((e, emit) {
+      if (state.reminders != e.reminders) {
+        emit(state.copyWith(reminders: e.reminders));
+      }
+    });
+    on<_AppAudioBytesUpdated>((e, emit) {
+      if (state.audioBytes != e.audioBytes) {
+        emit(state.copyWith(audioBytes: e.audioBytes));
+      }
+    });
+
     on<AppPrayerCompleted>(_onPrayerCompleted);
     on<AppSessionDeleted>(_onSessionDeleted);
     on<AppAudioDeleted>(_onAudioDeleted);
@@ -43,11 +85,27 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<AppReminderSaved>(_onReminderSaved);
     on<AppReminderDeleted>(_onReminderDeleted);
     on<AppReminderSnoozeCancelled>(_onReminderSnoozeCancelled);
-    on<AppDataReset>(_onDataReset);
-    on<AppAudioPlaybackRequested>(_onAudioPlaybackRequested);
-    on<AppAudioPlaybackStopped>(_onAudioPlaybackStopped);
-    on<AppDeviceSettingsRequested>(_onDeviceSettingsRequested);
-    on<AppAlarmTestRequested>(_onAlarmTestRequested);
+    on<AppAudioPlaybackRequested>((e, emit) => playAudio(e.session));
+    on<AppAudioPlaybackStopped>((e, emit) => stopPlayback());
+    on<AppDeviceSettingsRequested>((e, emit) => openDeviceSettings());
+    on<AppAlarmTestRequested>((e, emit) => testAlarm());
+
+    _subscribeToChildren();
+  }
+
+  void _subscribeToChildren() {
+    _remindersSub = remindersBloc.stream.listen((s) {
+      add(_AppRemindersUpdated(s.reminders));
+      if (s.error != null) report(s.error!);
+    });
+    _historySub = historyBloc.stream.listen((s) {
+      add(_AppSessionsUpdated(s.sessions));
+      if (s.error != null) report(s.error!);
+    });
+    _audioSub = audioBloc.stream.listen((s) {
+      add(_AppAudioBytesUpdated(s.audioBytes));
+      if (s.error != null) report(s.error!);
+    });
   }
 
   String get root => storage.root;
@@ -119,40 +177,31 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     return result.future;
   }
 
-  Future<void> playAudio(PrayerSession session) {
-    add(AppAudioPlaybackRequested(session));
-    return Future<void>.value();
-  }
+  Future<void> playAudio(PrayerSession session) => audioBloc.playAudio(session);
 
-  Future<void> stopPlayback() {
-    add(AppAudioPlaybackStopped());
-    return Future<void>.value();
-  }
+  Future<void> stopPlayback() => audioBloc.stopPlayback();
 
-  Future<void> openDeviceSettings() {
-    add(AppDeviceSettingsRequested());
-    return Future<void>.value();
-  }
+  Future<void> openDeviceSettings() => remindersBloc.openSettings();
 
-  Future<void> testAlarm() {
-    add(AppAlarmTestRequested());
-    return Future<void>.value();
-  }
+  Future<void> testAlarm() => remindersBloc.testAlarm();
 
   Future<void> _onRefresh(
     AppRefreshRequested event,
     Emitter<AppState> emit,
   ) async {
     try {
-      final sessions = unwrap(await repository.sessions());
-      final reminders = unwrap(await repository.reminders());
-      final bytes = await storage.audioBytes();
+      await Future.wait([
+        historyBloc.loadSessions(),
+        remindersBloc.loadReminders(),
+        audioBloc.loadAudioBytes(),
+      ]);
       emit(
         state.copyWith(
-          sessions: sessions,
-          reminders: reminders,
-          audioBytes: bytes,
+          sessions: historyBloc.state.sessions,
+          reminders: remindersBloc.state.reminders,
+          audioBytes: audioBloc.state.audioBytes,
           loading: false,
+          clearError: true,
         ),
       );
       event.result?.complete();
@@ -163,12 +212,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   }
 
   void _onLocaleChanged(AppLocaleChanged event, Emitter<AppState> emit) {
-    emit(
-      state.copyWith(
-        locale: event.locale,
-        loading: false,
-      ),
-    );
+    emit(state.copyWith(locale: event.locale, loading: false));
   }
 
   void _onErrorReported(AppErrorReported event, Emitter<AppState> emit) {
@@ -181,12 +225,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     try {
       await storage.completeOnboarding();
-      emit(
-        state.copyWith(
-          onboardingComplete: true,
-          loading: false,
-        ),
-      );
+      emit(state.copyWith(onboardingComplete: true, loading: false));
       event.result?.complete();
     } catch (error) {
       _emitError(emit, error);
@@ -198,113 +237,84 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppPrayerCompleted event,
     Emitter<AppState> emit,
   ) async {
-    try {
-      unwrap(await repository.complete(event.session));
-    } catch (error) {
-      _emitError(emit, error);
-      event.result?.complete(false);
-      return;
-    }
-    try {
-      await _refreshState(emit);
-    } catch (error) {
-      _emitError(emit, error);
-    }
-    // A refresh failure cannot undo the committed session or its audio.
-    event.result?.complete(true);
+    final success = await historyBloc.completeSession(event.session);
+    emit(
+      state.copyWith(
+        sessions: historyBloc.state.sessions,
+        error: historyBloc.state.error,
+      ),
+    );
+    event.result?.complete(success);
   }
 
   Future<void> _onSessionDeleted(
     AppSessionDeleted event,
     Emitter<AppState> emit,
   ) async {
-    try {
-      unwrap(await repository.deleteSession(event.id));
-      await _refreshState(emit);
-      event.result?.complete();
-    } catch (error) {
-      _emitError(emit, error);
-      event.result?.complete();
-    }
+    await historyBloc.deleteSession(event.id);
+    emit(
+      state.copyWith(
+        sessions: historyBloc.state.sessions,
+        error: historyBloc.state.error,
+      ),
+    );
+    event.result?.complete();
   }
 
   Future<void> _onAudioDeleted(
     AppAudioDeleted event,
     Emitter<AppState> emit,
   ) async {
-    try {
-      await device.stopPlayback();
-      unwrap(await repository.deleteAudio(event.id));
-      await _refreshState(emit);
-      event.result?.complete();
-    } catch (error) {
-      _emitError(emit, error);
-      event.result?.complete();
-    }
+    await audioBloc.deleteAudio(event.id);
+    emit(
+      state.copyWith(
+        audioBytes: audioBloc.state.audioBytes,
+        error: audioBloc.state.error,
+      ),
+    );
+    event.result?.complete();
   }
 
   Future<void> _onAllAudioDeleted(
     AppAllAudioDeleted event,
     Emitter<AppState> emit,
   ) async {
-    try {
-      await device.stopPlayback();
-      for (final session in state.sessions) {
-        unwrap(await repository.deleteAudio(session.id));
-      }
-      await _refreshState(emit);
-      event.result?.complete();
-    } catch (error) {
-      _emitError(emit, error);
-      event.result?.complete();
-    }
+    await audioBloc.deleteAllAudio(state.sessions);
+    emit(
+      state.copyWith(
+        audioBytes: audioBloc.state.audioBytes,
+        error: audioBloc.state.error,
+      ),
+    );
+    event.result?.complete();
   }
 
   Future<void> _onReminderSaved(
     AppReminderSaved event,
     Emitter<AppState> emit,
   ) async {
-    try {
-      unwrap(
-        await repository.saveReminder(
-          event.reminder.copyWith(status: 'pending'),
-        ),
-      );
-      await device.cancel(event.reminder.id);
-      if (event.reminder.enabled) await device.schedule(event.reminder);
-      unwrap(
-        await repository.saveReminder(
-          event.reminder.copyWith(
-            status: event.reminder.enabled ? 'ready' : 'paused',
-          ),
-        ),
-      );
-      await _refreshState(emit);
-      event.result?.complete(true);
-    } catch (error) {
-      try {
-        await _refreshState(emit);
-      } catch (_) {
-        // Preserve the original actionable error below.
-      }
-      _emitError(emit, error);
-      event.result?.complete(false);
-    }
+    final saved = await remindersBloc.saveReminder(event.reminder);
+    emit(
+      state.copyWith(
+        reminders: remindersBloc.state.reminders,
+        error: remindersBloc.state.error,
+      ),
+    );
+    event.result?.complete(saved);
   }
 
   Future<void> _onReminderDeleted(
     AppReminderDeleted event,
     Emitter<AppState> emit,
   ) async {
-    try {
-      await device.cancel(event.id);
-      unwrap(await repository.deleteReminder(event.id));
-      await _refreshState(emit);
-      event.result?.complete();
-    } catch (error) {
-      _emitError(emit, error);
-      event.result?.complete();
-    }
+    await remindersBloc.deleteReminder(event.id);
+    emit(
+      state.copyWith(
+        reminders: remindersBloc.state.reminders,
+        error: remindersBloc.state.error,
+      ),
+    );
+    event.result?.complete();
   }
 
   Future<void> _onReminderSnoozeCancelled(
@@ -312,20 +322,34 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     Emitter<AppState> emit,
   ) async {
     try {
-      await device.cancelSnooze(event.id);
+      await remindersBloc.cancelSnooze(event.id);
       event.result?.complete();
-    } catch (error) {
-      _emitError(emit, error);
-      event.result?.completeError(error);
+    } catch (err) {
+      _emitError(emit, err);
+      event.result?.completeError(err);
     }
   }
 
   Future<void> _onDataReset(AppDataReset event, Emitter<AppState> emit) async {
     try {
-      await device.stopPlayback();
+      await audioBloc.stopPlayback();
       await device.cancelAll();
       unwrap(await repository.reset());
-      await _refreshState(emit, onboardingComplete: false);
+      await Future.wait([
+        historyBloc.loadSessions(),
+        remindersBloc.loadReminders(),
+        audioBloc.loadAudioBytes(),
+      ]);
+      emit(
+        state.copyWith(
+          sessions: historyBloc.state.sessions,
+          reminders: remindersBloc.state.reminders,
+          audioBytes: audioBloc.state.audioBytes,
+          onboardingComplete: false,
+          loading: false,
+          clearError: true,
+        ),
+      );
       event.result?.complete(true);
     } catch (error) {
       _emitError(emit, error);
@@ -333,85 +357,27 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<void> _onAudioPlaybackRequested(
-    AppAudioPlaybackRequested event,
-    Emitter<AppState> emit,
-  ) async {
-    if (event.session.audioPath == null) return;
-    try {
-      await device.play(storage.pathFor(event.session.audioPath!));
-    } catch (error) {
-      _emitError(emit, error);
-    }
-  }
-
-  Future<void> _onAudioPlaybackStopped(
-    AppAudioPlaybackStopped event,
-    Emitter<AppState> emit,
-  ) async {
-    try {
-      await device.stopPlayback();
-    } catch (error) {
-      _emitError(emit, error);
-    }
-  }
-
-  Future<void> _onDeviceSettingsRequested(
-    AppDeviceSettingsRequested event,
-    Emitter<AppState> emit,
-  ) async {
-    try {
-      await device.settings();
-    } catch (error) {
-      _emitError(emit, error);
-    }
-  }
-
-  Future<void> _onAlarmTestRequested(
-    AppAlarmTestRequested event,
-    Emitter<AppState> emit,
-  ) async {
-    try {
-      await device.testAlarm();
-    } catch (error) {
-      _emitError(emit, error);
-    }
-  }
-
-  Future<void> _refreshState(
-    Emitter<AppState> emit, {
-    bool? onboardingComplete,
-  }) async {
-    final sessions = unwrap(await repository.sessions());
-    final reminders = unwrap(await repository.reminders());
-    final bytes = await storage.audioBytes();
-    emit(
-      state.copyWith(
-        sessions: sessions,
-        reminders: reminders,
-        audioBytes: bytes,
-        onboardingComplete: onboardingComplete,
-        loading: false,
-      ),
-    );
-  }
-
   void _emitError(Emitter<AppState> emit, Object error) {
     final message = error is Failure
         ? error.message
+        : error is String
+        ? error
         : error is PlatformException
         ? error.message ?? 'Check your device settings and try again.'
         : 'Something went wrong. Please try again.';
-    emit(
-      state.copyWith(
-        error: message,
-        loading: false,
-      ),
-    );
+    emit(state.copyWith(error: message, loading: false));
   }
 
   @override
   Future<void> close() async {
+    await _remindersSub?.cancel();
+    await _historySub?.cancel();
+    await _audioSub?.cancel();
+    await Future.wait([
+      remindersBloc.close(),
+      audioBloc.close(),
+      historyBloc.close(),
+    ]);
     await super.close();
     await closeResources?.call();
   }
