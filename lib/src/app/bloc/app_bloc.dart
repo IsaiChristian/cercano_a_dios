@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
@@ -31,6 +32,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final DeviceServices device;
   final LocalStorageService storage;
   final Future<void> Function()? closeResources;
+  final Locale? deviceLocale;
 
   final RemindersBloc remindersBloc;
   final AudioBloc audioBloc;
@@ -44,6 +46,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     required this.repository,
     required this.device,
     required this.storage,
+    Locale? initialLocale,
+    this.deviceLocale,
     bool onboardingComplete = false,
     this.closeResources,
     RemindersBloc? remindersBloc,
@@ -56,7 +60,18 @@ class AppBloc extends Bloc<AppEvent, AppState> {
            audioBloc ??
            AudioBloc(device: device, storage: storage, repository: repository),
        historyBloc = historyBloc ?? HistoryBloc(repository: repository),
-       super(AppState(loading: true, onboardingComplete: onboardingComplete)) {
+       super(
+         AppState(
+           loading: true,
+           onboardingComplete: onboardingComplete,
+           locale: initialLocale != null
+               ? AppState.resolveLocale(initialLocale)
+               : _resolveInitialLocale(
+                   storage: storage,
+                   deviceLocale: deviceLocale,
+                 ),
+         ),
+       ) {
     on<AppLocaleChanged>(_onLocaleChanged);
     on<AppRefreshRequested>(_onRefresh);
     on<AppErrorReported>(_onErrorReported);
@@ -110,7 +125,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   String get root => storage.root;
 
-  void setLocale(Locale locale) => add(AppLocaleChanged(locale));
+  Future<void> setLocale(Locale locale) {
+    final result = Completer<void>();
+    add(AppLocaleChanged(locale, result));
+    return result.future;
+  }
 
   T unwrap<T>(Either<Failure, T> result) =>
       result.fold((Failure failure) => throw failure, (value) => value);
@@ -190,6 +209,10 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     Emitter<AppState> emit,
   ) async {
     try {
+      final persistedCode = await storage.readLanguageCode();
+      final resolvedLocale = persistedCode != null
+          ? AppState.resolveInitialLocale(persistedLanguageCode: persistedCode)
+          : state.locale;
       await Future.wait([
         historyBloc.loadSessions(),
         remindersBloc.loadReminders(),
@@ -197,6 +220,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       ]);
       emit(
         state.copyWith(
+          locale: resolvedLocale,
           sessions: historyBloc.state.sessions,
           reminders: remindersBloc.state.reminders,
           audioBytes: audioBloc.state.audioBytes,
@@ -211,8 +235,19 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     }
   }
 
-  void _onLocaleChanged(AppLocaleChanged event, Emitter<AppState> emit) {
-    emit(state.copyWith(locale: event.locale, loading: false));
+  Future<void> _onLocaleChanged(
+    AppLocaleChanged event,
+    Emitter<AppState> emit,
+  ) async {
+    final resolved = AppState.resolveLocale(event.locale);
+    try {
+      storage.writeLanguageCodeSync(resolved.languageCode);
+      emit(state.copyWith(locale: resolved, loading: false));
+      event.result?.complete();
+    } catch (error) {
+      _emitError(emit, error);
+      event.result?.completeError(error);
+    }
   }
 
   void _onErrorReported(AppErrorReported event, Emitter<AppState> emit) {
@@ -384,6 +419,30 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     } catch (error) {
       _emitError(emit, error);
       event.result?.complete(false);
+    }
+  }
+
+  static Locale _resolveInitialLocale({
+    required LocalStorageService storage,
+    Locale? deviceLocale,
+  }) {
+    final persisted = storage.readLanguageCodeSync();
+    final effectiveDeviceLocale = deviceLocale ?? _systemDeviceLocale();
+    return AppState.resolveInitialLocale(
+      persistedLanguageCode: persisted,
+      deviceLocale: effectiveDeviceLocale,
+    );
+  }
+
+  static Locale? _systemDeviceLocale() {
+    try {
+      return WidgetsBinding.instance.platformDispatcher.locale;
+    } catch (_) {
+      try {
+        return PlatformDispatcher.instance.locale;
+      } catch (_) {
+        return null;
+      }
     }
   }
 

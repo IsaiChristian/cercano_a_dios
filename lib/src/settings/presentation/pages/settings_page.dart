@@ -52,7 +52,8 @@ class SettingsPage extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 title: Text(localizations.language),
                 trailing: DropdownButton<Locale>(
-                  value: app.state.locale,
+                  key: const Key('languageDropdown'),
+                  value: AppState.resolveLocale(app.state.locale),
                   onChanged: (locale) {
                     if (locale != null) app.setLocale(locale);
                   },
