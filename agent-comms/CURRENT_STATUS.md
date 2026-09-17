@@ -1,5 +1,14 @@
 # Current Agent Status
 
+FIX-NATIVE-ALARMS implemented locally; native device verification pending.
+Base advanced externally to main `e6023ae`; unrelated work preserved.
+Changed: Android PrayerAlarm.kt, iOS AppDelegate.swift and validation notes.
+Android defers overlaps ten minutes; actions retain reminder/occurrence identity.
+AlarmKit Stop & pray carries reminder identity through openPrayer.
+Analysis, 14 session tests, Swift parse and diff checks passed. Android compilation
+and Xcode 26 AlarmKit compilation/device tests remain pending. Ownership released.
+Details: [`FIX-NATIVE-ALARMS.md`](FIX-NATIVE-ALARMS.md). No commit or push.
+
 FIX-INDEPENDENT-CLEANUP complete locally; ownership released.
 Base: main at `339914f8dbf8bf49bf43e233dbe1bf4f1e2ec3a8` (clean checkout).
 SessionBloc now attempts recorder, playback and draft cleanup independently.

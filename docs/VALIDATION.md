@@ -1,5 +1,22 @@
 # Validation status
 
+## Native alarm correction, 2026-09-16
+
+Android now keeps the first alarm ringing and defers overlapping reminders ten
+minutes using persisted snoozes. Notification actions validate both reminder and
+ringing occurrence. iOS 26 uses **Stop & pray** plus **Snooze**, with reminder-aware
+cold/warm entry through the existing Flutter bridge. Previously scheduled iOS
+alarms must be rescheduled to use the new intent.
+
+Flutter analysis and all 14 focused session tests passed. Swift syntax parsing
+passed; it does not typecheck AlarmKit. Android compilation remains unavailable
+without Java/Android tooling; Xcode 26 is required for the AlarmKit build.
+Native device tests were not run. The precise overlap policy, limitations and
+required device matrix are in
+[`FIX-NATIVE-ALARMS.md`](../agent-comms/FIX-NATIVE-ALARMS.md).
+
+The older environment notes below describe the earlier validation snapshot.
+
 ## Checks performed in this environment
 
 - Dart and Kotlin source syntax parsed successfully. This does **not** substitute for their compilers or analyzers.

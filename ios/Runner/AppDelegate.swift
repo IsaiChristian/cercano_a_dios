@@ -13,13 +13,16 @@ import SwiftUI
     private var channel: FlutterMethodChannel?
     private var recorder: AVAudioRecorder?
     private var player: AVAudioPlayer?
-    private var openPrayer: Int? = nil
+    private static weak var prayerDelegate: AppDelegate?
+    private static let pendingPrayerKey = "pending_open_prayer"
+    private var prayerBridgeReady = false
     private let center = UNUserNotificationCenter.current()
 
     override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         GeneratedPluginRegistrant.register(with: self)
         let controller = window?.rootViewController as! FlutterViewController
         channel = FlutterMethodChannel(name: "cercano/device", binaryMessenger: controller.binaryMessenger)
+        Self.prayerDelegate = self
         channel?.setMethodCallHandler { [weak self] call, result in
             Task { @MainActor in
                 guard let self = self else { return }
@@ -47,7 +50,11 @@ import SwiftUI
         let args = call.arguments as? [String:Any] ?? [:]
         switch call.method {
         case "directory": result(try directory().path)
-        case "consumeOpenPrayer": result(openPrayer); openPrayer = nil
+        case "consumeOpenPrayer":
+            prayerBridgeReady = true
+            let pending = UserDefaults.standard.object(forKey: Self.pendingPrayerKey) as? Int
+            UserDefaults.standard.removeObject(forKey: Self.pendingPrayerKey)
+            result(pending)
         case "alarmCapability":
             #if canImport(AlarmKit)
             if #available(iOS 26.0, *) { result("alarm"); return }
@@ -146,6 +153,13 @@ import SwiftUI
         content.sound = .default; content.categoryIdentifier = "PRAYER"; content.userInfo = ["id":id]
         return content
     }
+    @MainActor static func requestPrayer(_ reminder: Int) {
+        // The intent can run before Flutter installs its handler on cold launch.
+        UserDefaults.standard.set(reminder, forKey: pendingPrayerKey)
+        guard let delegate = prayerDelegate, delegate.prayerBridgeReady else { return }
+        UserDefaults.standard.removeObject(forKey: pendingPrayerKey)
+        delegate.channel?.invokeMethod("openPrayer", arguments: reminder)
+    }
     private func stopAudio() {
         recorder?.stop(); recorder = nil; player?.stop(); player = nil
         try? AVAudioSession.sharedInstance().setActive(false)
@@ -164,8 +178,7 @@ import SwiftUI
             let request = UNNotificationRequest(identifier: "snooze-\(id)", content: reminderContent(id: id), trigger: UNTimeIntervalNotificationTrigger(timeInterval: 600, repeats: false))
             center.add(request) { _ in completionHandler() }
         } else {
-            openPrayer = response.notification.request.content.userInfo["id"] as? Int ?? 0
-            channel?.invokeMethod("openPrayer", arguments: openPrayer)
+            Self.requestPrayer(response.notification.request.content.userInfo["id"] as? Int ?? 0)
             completionHandler()
         }
     }
@@ -174,6 +187,22 @@ import SwiftUI
 #if canImport(AlarmKit)
 @available(iOS 26.0, *)
 struct PrayerAlarmMetadata: AlarmMetadata {}
+
+@available(iOS 26.0, *)
+struct OpenPrayerIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Stop and pray"
+    static var openAppWhenRun: Bool = true
+    @Parameter(title: "Alarm identifier") var alarmID: String
+    @Parameter(title: "Prayer time") var reminderID: Int
+    init() {}
+    init(alarmID: String, reminderID: Int) { self.alarmID = alarmID; self.reminderID = reminderID }
+    @MainActor func perform() async throws -> some IntentResult {
+        // The system may have already stopped it while executing the stop action.
+        if let id = UUID(uuidString: alarmID) { try? AlarmManager.shared.stop(id: id) }
+        AppDelegate.requestPrayer(reminderID)
+        return .result()
+    }
+}
 
 @available(iOS 26.0, *)
 struct SnoozePrayerIntent: LiveActivityIntent {
@@ -204,11 +233,12 @@ struct SnoozePrayerIntent: LiveActivityIntent {
     }
     static func configuration(id: UUID, reminder: Int, schedule: Alarm.Schedule) -> AlarmManager.AlarmConfiguration<PrayerAlarmMetadata> {
         let alert = AlarmPresentation.Alert(title: "A time for prayer",
-            stopButton: AlarmButton(text: "Stop", textColor: .white, systemImageName: "stop.fill"),
+            stopButton: AlarmButton(text: "Stop & pray", textColor: .white, systemImageName: "stop.fill"),
             secondaryButton: AlarmButton(text: "Snooze 10 min", textColor: .white, systemImageName: "zzz"),
             secondaryButtonBehavior: .custom)
         let attributes = AlarmAttributes(presentation: AlarmPresentation(alert: alert), metadata: PrayerAlarmMetadata(), tintColor: .green)
         return .alarm(schedule: schedule, attributes: attributes,
+            stopIntent: OpenPrayerIntent(alarmID: id.uuidString, reminderID: reminder),
             secondaryIntent: SnoozePrayerIntent(alarmID: id.uuidString, reminderID: reminder))
     }
     static func schedule(_ args: [String:Any]) async throws {

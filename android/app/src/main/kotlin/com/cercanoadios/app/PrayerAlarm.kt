@@ -5,9 +5,11 @@ import android.app.*
 import android.content.*
 import android.content.pm.PackageManager
 import android.media.*
+import android.net.Uri
 import android.os.*
 import org.json.JSONObject
 import java.util.Calendar
+import java.util.UUID
 
 object AlarmStore {
     fun manager(c: Context) = c.getSystemService(AlarmManager::class.java)
@@ -56,6 +58,12 @@ object AlarmStore {
     fun cancelSnooze(c: Context,id: Int) {
         manager(c).cancel(intent(c,id,true)); prefs(c).edit().remove("snooze_$id").commit()
     }
+    fun deferOverlap(c: Context,id: Int) {
+        val time = System.currentTimeMillis()+600000
+        // Retain the reminder even if exact-alarm permission changes mid-ring.
+        prefs(c).edit().putLong("snooze_$id",time).commit()
+        at(c,id,time,true)
+    }
     fun cancel(c: Context,id: Int) {
         manager(c).cancel(intent(c,id,false)); manager(c).cancel(intent(c,id,true))
         prefs(c).edit().remove("alarm_$id").remove("snooze_$id").commit()
@@ -101,26 +109,52 @@ class PrayerAlarmService: Service() {
     }
     private var player: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var occurrence: String? = null
     private val handler = Handler(Looper.getMainLooper())
     private val spanish get() = resources.configuration.locales[0].language == "es"
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?,flags: Int,startId: Int): Int {
-        if(intent?.action == "STOP") { stopSelf(); return START_NOT_STICKY }
-        if(intent?.action == "SNOOZE") {
-            activeId?.let { try { AlarmStore.at(this,it,System.currentTimeMillis()+600000,true) } catch(_: Exception) {} }
+        if(intent?.action == "STOP" || intent?.action == "SNOOZE") {
+            // Old notification actions must never act on a newer occurrence.
+            if(activeId == null || intent.getIntExtra("id", -1) != activeId ||
+                intent.getStringExtra("occurrence") != occurrence) {
+                if(activeId == null) stopSelf()
+                return START_NOT_STICKY
+            }
+            if(intent.action == "SNOOZE") {
+                try { AlarmStore.at(this,activeId!!,System.currentTimeMillis()+600000,true) }
+                catch(_: Exception) { return START_NOT_STICKY }
+            }
             stopSelf(); return START_NOT_STICKY
         }
-        activeId = intent?.getIntExtra("id",0) ?: 0
+        if(intent == null || !intent.hasExtra("id")) { stopSelf(); return START_NOT_STICKY }
+        val id = intent.getIntExtra("id",0)
+        if(activeId != null) {
+            // First ringing reminder wins. Persist overlaps as ten-minute snoozes,
+            // so opening prayer or stopping this service cannot discard them.
+            if(activeId != id) {
+                try { AlarmStore.deferOverlap(this,id) }
+                catch(_: Exception) { /* Existing alarm remains actionable. */ }
+            }
+            return START_NOT_STICKY
+        }
+        activeId = id
+        occurrence = UUID.randomUUID().toString()
         val nm = getSystemService(NotificationManager::class.java)
         if(Build.VERSION.SDK_INT >= 26) {
             nm.createNotificationChannel(NotificationChannel(CHANNEL,"Prayer alarms",NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Scheduled prayer alarms with Stop and Snooze"; setSound(null,null)
             })
         }
-        val open = PendingIntent.getActivity(this,1,Intent(this,MainActivity::class.java).putExtra("openPrayer",true).putExtra("reminderID",activeId ?: 0)
+        val open = PendingIntent.getActivity(this,id,Intent(this,MainActivity::class.java)
+            .setData(Uri.parse("cercano://alarm/$id/$occurrence/open"))
+            .putExtra("openPrayer",true).putExtra("reminderID",id)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         fun action(name: String,code: Int) = PendingIntent.getService(this,code,
-            Intent(this,PrayerAlarmService::class.java).setAction(name),PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            Intent(this,PrayerAlarmService::class.java).setAction(name)
+                .setData(Uri.parse("cercano://alarm/$id/$occurrence/$name"))
+                .putExtra("id",id).putExtra("occurrence",occurrence),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         @Suppress("DEPRECATION")
         val notification = (if(Build.VERSION.SDK_INT >= 26) Notification.Builder(this,CHANNEL) else Notification.Builder(this))
             .setSmallIcon(R.drawable.ic_alarm)
@@ -148,6 +182,6 @@ class PrayerAlarmService: Service() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null); player?.release(); player = null
         if(wakeLock?.isHeld == true) wakeLock?.release()
-        activeId = null; stopForeground(STOP_FOREGROUND_REMOVE); super.onDestroy()
+        activeId = null; occurrence = null; stopForeground(STOP_FOREGROUND_REMOVE); super.onDestroy()
     }
 }
