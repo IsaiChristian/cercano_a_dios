@@ -1,6 +1,6 @@
 part of 'reminders_bloc.dart';
 
-class RemindersState {
+class RemindersState extends Equatable {
   final String capability;
   final String permission;
   final bool busy;
@@ -10,4 +10,7 @@ class RemindersState {
     this.permission = 'unknown',
     this.busy = false,
   });
+
+  @override
+  List<Object?> get props => [capability, permission, busy];
 }

@@ -1,6 +1,6 @@
 part of 'app_bloc.dart';
 
-class AppState {
+class AppState extends Equatable {
   final Locale locale;
   final List<PrayerSession> sessions;
   final List<Reminder> reminders;
@@ -41,4 +41,9 @@ class AppState {
   }
 
   PrayerProgress progress(DateTime now) => calculateProgress(sessions, now);
+
+  @override
+  List<Object?> get props => [
+    locale, sessions, reminders, loading, error, audioBytes, onboardingComplete,
+  ];
 }

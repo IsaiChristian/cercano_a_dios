@@ -1,4 +1,6 @@
-class PrayerSession {
+import 'package:equatable/equatable.dart';
+
+class PrayerSession extends Equatable {
   final String id;
   final String promptId;
   final String promptText;
@@ -20,4 +22,10 @@ class PrayerSession {
     this.audioPath,
     required this.offsetMinutes,
   });
+
+  @override
+  List<Object?> get props => [
+    id, promptId, promptText, localDate, completedAt,
+    durationSeconds, offsetMinutes, spoken, audioPath,
+  ];
 }

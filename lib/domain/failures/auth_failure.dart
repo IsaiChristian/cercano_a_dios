@@ -16,13 +16,5 @@ class AuthFailure extends Failure {
   const AuthFailure(this.reason, [String message = '']) : super(message);
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AuthFailure &&
-          runtimeType == other.runtimeType &&
-          reason == other.reason &&
-          message == other.message;
-
-  @override
-  int get hashCode => reason.hashCode ^ message.hashCode;
+  List<Object?> get props => [reason, message];
 }
