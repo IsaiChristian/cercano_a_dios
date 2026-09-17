@@ -6,8 +6,9 @@ abstract class AppEvent {
 
 class AppLocaleChanged extends AppEvent {
   final Locale locale;
+  final Completer<void>? result;
 
-  const AppLocaleChanged(this.locale);
+  const AppLocaleChanged(this.locale, [this.result]);
 }
 
 class AppRefreshRequested extends AppEvent {

@@ -16,6 +16,44 @@ class LocalStorageService {
     await File(pathFor('welcomed')).writeAsString('1');
   }
 
+  Future<String?> readLanguageCode() async {
+    try {
+      final file = File(pathFor('language'));
+      if (await file.exists()) {
+        final code = (await file.readAsString()).trim();
+        if (code.isNotEmpty) return code;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  String? readLanguageCodeSync() {
+    try {
+      final file = File(pathFor('language'));
+      if (file.existsSync()) {
+        final code = file.readAsStringSync().trim();
+        if (code.isNotEmpty) return code;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<void> writeLanguageCode(String languageCode) async {
+    final file = File(pathFor('language'));
+    if (!await file.parent.exists()) {
+      await file.parent.create(recursive: true);
+    }
+    await file.writeAsString(languageCode.trim());
+  }
+
+  void writeLanguageCodeSync(String languageCode) {
+    final file = File(pathFor('language'));
+    if (!file.parent.existsSync()) {
+      file.parent.createSync(recursive: true);
+    }
+    file.writeAsStringSync(languageCode.trim());
+  }
+
   Future<int> audioBytes() async {
     var bytes = 0;
     await for (final entity in Directory(root).list()) {

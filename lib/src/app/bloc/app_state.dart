@@ -9,8 +9,41 @@ class AppState extends Equatable {
   final int audioBytes;
   final bool onboardingComplete;
 
+  static const Locale defaultLocale = Locale('en');
+  static const List<Locale> supportedLocales = [Locale('en'), Locale('es')];
+
+  static Locale resolveLocale(Locale? locale) {
+    if (locale == null) return defaultLocale;
+    final code = locale.languageCode.toLowerCase();
+    for (final supported in supportedLocales) {
+      if (supported.languageCode.toLowerCase() == code) {
+        return supported;
+      }
+    }
+    return defaultLocale;
+  }
+
+  static Locale resolveInitialLocale({
+    String? persistedLanguageCode,
+    Locale? deviceLocale,
+  }) {
+    if (persistedLanguageCode != null &&
+        persistedLanguageCode.trim().isNotEmpty) {
+      final code = persistedLanguageCode.trim().toLowerCase();
+      for (final supported in supportedLocales) {
+        if (supported.languageCode.toLowerCase() == code) {
+          return supported;
+        }
+      }
+    }
+    if (deviceLocale != null) {
+      return resolveLocale(deviceLocale);
+    }
+    return defaultLocale;
+  }
+
   AppState({
-    this.locale = const Locale('en'),
+    this.locale = defaultLocale,
     List<PrayerSession> sessions = const [],
     List<Reminder> reminders = const [],
     this.loading = false,
