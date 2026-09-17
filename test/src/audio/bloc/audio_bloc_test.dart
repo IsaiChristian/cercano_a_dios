@@ -28,12 +28,19 @@ class FakeAudioRepository implements PrayerRepository {
   final List<String> deletedAudioIds = [];
   List<PrayerSession> sessionsToReturn = [];
   bool failDeleteAudio = false;
+  final Set<String> failAudioIds = {};
   bool failSessions = false;
   String failMessage = 'Error';
 
   @override
   Future<Either<Failure, void>> deleteAudio(String id) async {
-    if (failDeleteAudio) return Left(Failure(failMessage));
+    if (failDeleteAudio || failAudioIds.contains(id)) {
+      return Left(
+        Failure(
+          failAudioIds.contains(id) ? '$failMessage for $id' : failMessage,
+        ),
+      );
+    }
     deletedAudioIds.add(id);
     return const Right(null);
   }
@@ -177,7 +184,98 @@ void main() {
   test('deleteAudio preserves failure error instead of clearing it', () async {
     repository.failDeleteAudio = true;
     repository.failMessage = 'File locked';
-    await bloc.deleteAudio('s1');
+    final result = await bloc.deleteAudio('s1');
     expect(bloc.state.error, equals('File locked'));
+    expect(result.isFailure, isTrue);
+    expect(result.failedIds['s1'], equals('File locked'));
+    expect(bloc.state.lastDeleteResult, equals(result));
+  });
+
+  test(
+    'deleteAudio on success returns AudioDeleteResult with successfulIds and clears error',
+    () async {
+      final result = await bloc.deleteAudio('s1');
+      expect(result.isSuccess, isTrue);
+      expect(result.successfulIds, contains('s1'));
+      expect(result.failedIds, isEmpty);
+      expect(bloc.state.error, isNull);
+      expect(bloc.state.lastDeleteResult, equals(result));
+    },
+  );
+
+  test(
+    'deleteAllAudio handles mixed-success bulk deletion, refreshes bytes, preserves failure error, and reports outcome',
+    () async {
+      final s2 = PrayerSession(
+        id: 's2',
+        promptId: 'p2',
+        promptText: 'Prompt 2',
+        localDate: '2026-09-16',
+        completedAt: DateTime.now(),
+        durationSeconds: 45,
+        offsetMinutes: 0,
+        spoken: true,
+        audioPath: 'recording2.m4a',
+      );
+      final s3 = PrayerSession(
+        id: 's3',
+        promptId: 'p3',
+        promptText: 'Prompt 3',
+        localDate: '2026-09-16',
+        completedAt: DateTime.now(),
+        durationSeconds: 60,
+        offsetMinutes: 0,
+        spoken: true,
+        audioPath: 'recording3.m4a',
+      );
+
+      // Create files in storage so bytes are calculated
+      final file1 = File(storage.pathFor('recording1.m4a'));
+      final file3 = File(storage.pathFor('recording3.m4a'));
+      await file1.create(recursive: true);
+      await file1.writeAsBytes(List.filled(100, 1));
+      await file3.create(recursive: true);
+      await file3.writeAsBytes(List.filled(200, 2));
+
+      // Make s2 fail
+      repository.failAudioIds.add('s2');
+
+      final result = await bloc.deleteAllAudio([sampleSession, s2, s3]);
+
+      // Verify explicit outcome
+      expect(result.isPartial, isTrue);
+      expect(result.isSuccess, isFalse);
+      expect(result.isFailure, isFalse);
+      expect(result.successfulIds, equals(['s1', 's3']));
+      expect(result.failedIds.keys, equals(['s2']));
+      expect(result.failedIds['s2'], contains('Error for s2'));
+
+      // Verify state preserves error and outcome
+      expect(
+        bloc.state.error,
+        contains('Failed to delete audio for session s2'),
+      );
+      expect(bloc.state.lastDeleteResult, equals(result));
+      expect(repository.deletedAudioIds, equals(['s1', 's3']));
+
+      // Verify retryFailedDeletions retries only the failed session (s2)
+      repository.failAudioIds.clear();
+      final retryResult = await bloc.retryFailedDeletions();
+      expect(retryResult.isSuccess, isTrue);
+      expect(retryResult.successfulIds, equals(['s2']));
+      expect(bloc.state.error, isNull);
+      expect(repository.deletedAudioIds, containsAll(['s1', 's3', 's2']));
+    },
+  );
+
+  test('clearError clears preserved error on AudioState', () async {
+    repository.failDeleteAudio = true;
+    repository.failMessage = 'Disk failure';
+    await bloc.deleteAudio('s1');
+    expect(bloc.state.error, equals('Disk failure'));
+
+    bloc.clearError();
+    await Future<void>.delayed(Duration.zero);
+    expect(bloc.state.error, isNull);
   });
 }

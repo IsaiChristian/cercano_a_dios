@@ -10,6 +10,10 @@ import '../../../../domain/entities/prayer_session.dart';
 import '../../../../domain/failures/failure.dart';
 import '../../../../domain/repositories/prayer_repository.dart';
 
+import '../../domain/audio_delete_result.dart';
+
+export '../../domain/audio_delete_result.dart';
+
 part 'audio_state.dart';
 part 'audio_event.dart';
 
@@ -29,6 +33,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     on<AudioPlaybackStopped>(_onPlaybackStopped);
     on<AudioDeleted>(_onAudioDeleted);
     on<AudioAllDeleted>(_onAllAudioDeleted);
+    on<AudioErrorCleared>(_onErrorCleared);
   }
 
   Future<void> loadAudioBytes() {
@@ -49,16 +54,46 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     return result.future;
   }
 
-  Future<void> deleteAudio(String id) {
-    final result = Completer<void>();
+  Future<AudioDeleteResult> deleteAudio(String id) {
+    final result = Completer<AudioDeleteResult>();
     add(AudioDeleted(id, result));
     return result.future;
   }
 
-  Future<void> deleteAllAudio([List<PrayerSession>? sessions]) {
-    final result = Completer<void>();
+  Future<AudioDeleteResult> deleteAllAudio([List<PrayerSession>? sessions]) {
+    final result = Completer<AudioDeleteResult>();
     add(AudioAllDeleted(sessions, result));
     return result.future;
+  }
+
+  Future<AudioDeleteResult> retryFailedDeletions() async {
+    final last = state.lastDeleteResult;
+    if (last == null || last.failedIds.isEmpty) {
+      return const AudioDeleteResult();
+    }
+    final failedSessions = last.failedIds.keys
+        .where((id) => id != '*')
+        .map(
+          (id) => PrayerSession(
+            id: id,
+            promptId: '',
+            promptText: '',
+            localDate: '',
+            completedAt: DateTime.now(),
+            durationSeconds: 0,
+            offsetMinutes: 0,
+            spoken: true,
+          ),
+        )
+        .toList();
+    if (failedSessions.isEmpty) {
+      return deleteAllAudio();
+    }
+    return deleteAllAudio(failedSessions);
+  }
+
+  void clearError() {
+    add(const AudioErrorCleared());
   }
 
   Future<void> _onBytesLoadRequested(
@@ -125,10 +160,17 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       await device.stopPlayback();
       final deleteResult = await repository.deleteAudio(event.id);
       String? error;
-      deleteResult.fold((failure) {
-        error = failure.message;
-        _emitError(emit, failure);
-      }, (_) {});
+      late final AudioDeleteResult result;
+      deleteResult.fold(
+        (failure) {
+          error = failure.message;
+          _emitError(emit, failure);
+          result = AudioDeleteResult(failedIds: {event.id: failure.message});
+        },
+        (_) {
+          result = AudioDeleteResult(successfulIds: [event.id]);
+        },
+      );
       final bytes = await storage.audioBytes();
       emit(
         state.copyWith(
@@ -138,13 +180,17 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           busy: false,
           error: error,
           clearError: error == null,
+          lastDeleteResult: result,
         ),
       );
-      event.result?.complete();
+      event.result?.complete(result);
     } catch (error) {
       _emitError(emit, error);
-      emit(state.copyWith(busy: false));
-      event.result?.complete();
+      final failResult = AudioDeleteResult(
+        failedIds: {event.id: error.toString()},
+      );
+      emit(state.copyWith(busy: false, lastDeleteResult: failResult));
+      event.result?.complete(failResult);
     }
   }
 
@@ -159,25 +205,56 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (event.sessions == null) {
         final sessionsResult = await repository.sessions();
         var readFailed = false;
+        Failure? readFailure;
         sessionsResult.fold((failure) {
           _emitError(emit, failure);
           readFailed = true;
+          readFailure = failure;
         }, (sessions) => targetSessions = sessions);
         if (readFailed) {
-          emit(state.copyWith(busy: false));
-          event.result?.complete();
+          final failResult = AudioDeleteResult(
+            failedIds: {'*': readFailure?.message ?? 'Failed to read sessions'},
+          );
+          emit(state.copyWith(busy: false, lastDeleteResult: failResult));
+          event.result?.complete(failResult);
           return;
         }
       }
-      String? error;
+
+      final successfulIds = <String>[];
+      final failedIds = <String, String>{};
+
       for (final session in targetSessions) {
         final deleteResult = await repository.deleteAudio(session.id);
-        deleteResult.fold((failure) {
-          error = failure.message;
-          _emitError(emit, failure);
-        }, (_) {});
+        deleteResult.fold(
+          (failure) {
+            failedIds[session.id] = failure.message;
+          },
+          (_) {
+            successfulIds.add(session.id);
+          },
+        );
       }
+
       final bytes = await storage.audioBytes();
+      final result = AudioDeleteResult(
+        successfulIds: successfulIds,
+        failedIds: failedIds,
+      );
+
+      String? error;
+      if (failedIds.isNotEmpty) {
+        if (failedIds.length == 1) {
+          final entry = failedIds.entries.first;
+          error =
+              'Failed to delete audio for session ${entry.key}: ${entry.value}';
+        } else {
+          error =
+              'Failed to delete audio for ${failedIds.length} of ${targetSessions.length} sessions';
+        }
+        _emitError(emit, Failure(error));
+      }
+
       emit(
         state.copyWith(
           audioBytes: bytes,
@@ -186,14 +263,20 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           busy: false,
           error: error,
           clearError: error == null,
+          lastDeleteResult: result,
         ),
       );
-      event.result?.complete();
+      event.result?.complete(result);
     } catch (error) {
       _emitError(emit, error);
-      emit(state.copyWith(busy: false));
-      event.result?.complete();
+      final failResult = AudioDeleteResult(failedIds: {'*': error.toString()});
+      emit(state.copyWith(busy: false, lastDeleteResult: failResult));
+      event.result?.complete(failResult);
     }
+  }
+
+  void _onErrorCleared(AudioErrorCleared event, Emitter<AudioState> emit) {
+    emit(state.copyWith(clearError: true));
   }
 
   void _emitError(Emitter<AudioState> emit, Object error) {

@@ -25,14 +25,18 @@ class AudioPlaybackStopped extends AudioEvent {
 
 class AudioDeleted extends AudioEvent {
   final String id;
-  final Completer<void>? result;
+  final Completer<AudioDeleteResult>? result;
 
   const AudioDeleted(this.id, [this.result]);
 }
 
 class AudioAllDeleted extends AudioEvent {
   final List<PrayerSession>? sessions;
-  final Completer<void>? result;
+  final Completer<AudioDeleteResult>? result;
 
   const AudioAllDeleted([this.sessions, this.result]);
+}
+
+class AudioErrorCleared extends AudioEvent {
+  const AudioErrorCleared();
 }
