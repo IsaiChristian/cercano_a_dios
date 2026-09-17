@@ -26,16 +26,24 @@ class FakeAudioDevice extends DeviceServices {
 
 class FakeAudioRepository implements PrayerRepository {
   final List<String> deletedAudioIds = [];
+  List<PrayerSession> sessionsToReturn = [];
+  bool failDeleteAudio = false;
+  bool failSessions = false;
+  String failMessage = 'Error';
 
   @override
   Future<Either<Failure, void>> deleteAudio(String id) async {
+    if (failDeleteAudio) return Left(Failure(failMessage));
     deletedAudioIds.add(id);
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, List<PrayerSession>>> sessions() async =>
-      const Right([]);
+  Future<Either<Failure, List<PrayerSession>>> sessions() async {
+    if (failSessions) return Left(Failure(failMessage));
+    return Right(sessionsToReturn);
+  }
+
   @override
   Future<Either<Failure, void>> complete(PrayerSession session) async =>
       const Right(null);
@@ -132,5 +140,44 @@ void main() {
     );
     await bloc.deleteAllAudio([sampleSession, s2]);
     expect(repository.deletedAudioIds, containsAll(['s1', 's2']));
+  });
+
+  test(
+    'deleteAllAudio without arguments queries repository sessions',
+    () async {
+      final s2 = PrayerSession(
+        id: 's2',
+        promptId: 'p2',
+        promptText: 'Prompt 2',
+        localDate: '2026-09-16',
+        completedAt: DateTime.now(),
+        durationSeconds: 45,
+        offsetMinutes: 0,
+        spoken: true,
+        audioPath: 'recording2.m4a',
+      );
+      repository.sessionsToReturn = [sampleSession, s2];
+      await bloc.deleteAllAudio();
+      expect(repository.deletedAudioIds, containsAll(['s1', 's2']));
+    },
+  );
+
+  test(
+    'deleteAllAudio sets error and does not delete when repository read fails',
+    () async {
+      repository.failSessions = true;
+      repository.failMessage = 'DB read failed';
+      await bloc.deleteAllAudio();
+      expect(bloc.state.error, equals('DB read failed'));
+      expect(bloc.state.busy, isFalse);
+      expect(repository.deletedAudioIds, isEmpty);
+    },
+  );
+
+  test('deleteAudio preserves failure error instead of clearing it', () async {
+    repository.failDeleteAudio = true;
+    repository.failMessage = 'File locked';
+    await bloc.deleteAudio('s1');
+    expect(bloc.state.error, equals('File locked'));
   });
 }

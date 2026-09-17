@@ -36,10 +36,27 @@ class FakeHistoryRepository implements PrayerRepository {
   Future<Either<Failure, void>> saveReminder(Reminder reminder) async =>
       const Right(null);
   @override
-  Future<Either<Failure, void>> deleteReminder(int id) async =>
-      const Right(null);
+  Future<Either<Failure, void>> deleteAudio(String id) async {
+    final idx = sessionList.indexWhere((s) => s.id == id);
+    if (idx != -1) {
+      final s = sessionList[idx];
+      sessionList[idx] = PrayerSession(
+        id: s.id,
+        promptId: s.promptId,
+        promptText: s.promptText,
+        localDate: s.localDate,
+        completedAt: s.completedAt,
+        durationSeconds: s.durationSeconds,
+        offsetMinutes: s.offsetMinutes,
+        spoken: s.spoken,
+        audioPath: null,
+      );
+    }
+    return const Right(null);
+  }
+
   @override
-  Future<Either<Failure, void>> deleteAudio(String id) async =>
+  Future<Either<Failure, void>> deleteReminder(int id) async =>
       const Right(null);
   @override
   Future<Either<Failure, void>> reset() async => const Right(null);
@@ -111,5 +128,79 @@ void main() {
 
     await bloc.deleteSession('s1');
     expect(bloc.state.sessions, isEmpty);
+  });
+
+  test('syncAudioDeleted reloads sessions with null audioPath', () async {
+    final recordedSession = PrayerSession(
+      id: 's1',
+      promptId: 'p1',
+      promptText: 'Be still',
+      localDate: '2026-09-16',
+      completedAt: DateTime.now(),
+      durationSeconds: 60,
+      offsetMinutes: 0,
+      spoken: true,
+      audioPath: 'rec.m4a',
+    );
+    repository.sessionList.add(recordedSession);
+    await bloc.loadSessions();
+    expect(bloc.state.sessions.first.audioPath, equals('rec.m4a'));
+
+    await repository.deleteAudio('s1');
+    await bloc.syncAudioDeleted('s1');
+    expect(bloc.state.sessions.length, equals(1));
+    expect(bloc.state.sessions.first.id, equals('s1'));
+    expect(bloc.state.sessions.first.audioPath, isNull);
+  });
+
+  test(
+    'syncAllAudioDeleted reloads all sessions with null audioPath',
+    () async {
+      final s1 = PrayerSession(
+        id: 's1',
+        promptId: 'p1',
+        promptText: 'Prompt 1',
+        localDate: '2026-09-16',
+        completedAt: DateTime.now(),
+        durationSeconds: 30,
+        offsetMinutes: 0,
+        spoken: true,
+        audioPath: 'rec1.m4a',
+      );
+      final s2 = PrayerSession(
+        id: 's2',
+        promptId: 'p2',
+        promptText: 'Prompt 2',
+        localDate: '2026-09-16',
+        completedAt: DateTime.now(),
+        durationSeconds: 45,
+        offsetMinutes: 0,
+        spoken: true,
+        audioPath: 'rec2.m4a',
+      );
+      repository.sessionList.addAll([s1, s2]);
+      await bloc.loadSessions();
+
+      await repository.deleteAudio('s1');
+      await repository.deleteAudio('s2');
+      await bloc.syncAllAudioDeleted();
+
+      expect(bloc.state.sessions.length, equals(2));
+      expect(bloc.state.sessions[0].audioPath, isNull);
+      expect(bloc.state.sessions[1].audioPath, isNull);
+    },
+  );
+
+  test('syncAudioDeleted failure preserves sessions and sets error', () async {
+    repository.sessionList.add(sampleSession);
+    await bloc.loadSessions();
+    expect(bloc.state.sessions, equals([sampleSession]));
+
+    repository.failNext = true;
+    repository.failMessage = 'Sync failed';
+    await bloc.syncAudioDeleted('s1');
+
+    expect(bloc.state.error, equals('Sync failed'));
+    expect(bloc.state.sessions, equals([sampleSession]));
   });
 }

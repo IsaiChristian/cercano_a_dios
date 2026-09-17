@@ -31,8 +31,8 @@ class AudioDeleted extends AudioEvent {
 }
 
 class AudioAllDeleted extends AudioEvent {
-  final List<PrayerSession> sessions;
+  final List<PrayerSession>? sessions;
   final Completer<void>? result;
 
-  const AudioAllDeleted(this.sessions, [this.result]);
+  const AudioAllDeleted([this.sessions, this.result]);
 }
