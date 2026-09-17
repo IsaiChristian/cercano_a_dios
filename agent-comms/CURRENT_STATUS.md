@@ -5,7 +5,7 @@ Preserved feature-scoped BLoCs (HistoryBloc, AudioBloc, RemindersBloc) from main
 and Equatable entities/failures/BLoC states from PR14. Added RemindersState Equatable
 regression test. Verification: dart format, dart analyze, flutter test passed.
 
-R01/R02 merged into origin/main (PR #16 and PR #17).
+R01–R04 implemented and submitted via pull requests.
 - R01: `codex/r01-auth-integration` (`f514e2a`) merged (PR #16). Complete authentication
   and per-user app integration: bootstrap configuration, reactive routing guards,
   settings sign-out, gated alarm navigation, legacy anonymous data preservation,
@@ -14,6 +14,14 @@ R01/R02 merged into origin/main (PR #16 and PR #17).
   AppBloc audio mutation synchronization, AudioBloc/HistoryBloc synchronization helpers,
   quota enforcement, committed audio preservation, and 16 new/expanded regression tests
   (141/141 passed). Details: [`R02-AUDIO-STATE-SYNC.md`](R02-AUDIO-STATE-SYNC.md).
+- R03: `codex/r03-audio-delete-results` (`969a5e7`) submitted (PR #18).
+  Preserve failed and partially completed audio-delete results via `AudioDeleteResult`,
+  retained `AudioState.lastDeleteResult` and `errorMessage`, `AudioErrorCleared`,
+  and `retryFailedDeletions()` retry mechanism. Details: [`R03-AUDIO-DELETE-RESULTS.md`](R03-AUDIO-DELETE-RESULTS.md).
+- R04: `codex/r04-locale-persistence` (`d4f1ca9`) submitted (PR #19).
+  Honor device locale (Spanish/English/fallback) on first launch, synchronous persistence
+  via `LocalStorageService.writeLanguageCodeSync()`, SettingsPage dropdown wiring, and
+  full persistence/refresh integration. Details: [`R04-LOCALE-PERSISTENCE.md`](R04-LOCALE-PERSISTENCE.md).
 
 IMPLEMENTATION-REVIEW complete locally; ownership released. Base: main `4d8e66e`.
 Created [22 prioritized review tasks](../docs/IMPLEMENTATION_REVIEW_TASKS.md) with

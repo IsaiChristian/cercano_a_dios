@@ -52,7 +52,7 @@ Passing component tests does not validate the full application or native device 
   save/session deletion updates storage and quota immediately; streak/history
   semantics remain intact. Add AppBloc integration tests across child BLoCs.
 
-- [ ] **R03 · P2 · Preserve failed and partially completed audio-delete results.**
+- [x] **R03 · P2 · Preserve failed and partially completed audio-delete results.**
   **Evidence:** `lib/src/audio/presentation/bloc/audio_bloc.dart:125` and `:153`.
   A repository `Left` emits an error, but the handler proceeds to emit
   `clearError: true` and resolves its command normally. Bulk deletion also hides
@@ -60,8 +60,9 @@ Passing component tests does not validate the full application or native device 
   **Done when:** failed/partial deletion has an explicit outcome, preserves a
   useful error until handled, refreshes the successful changes, and supports
   retry. Test single failure and mixed-success bulk deletion.
+  **Implemented:** `codex/r03-audio-delete-results` (PR #18). Details: [`R03-AUDIO-DELETE-RESULTS.md`](../agent-comms/R03-AUDIO-DELETE-RESULTS.md).
 
-- [ ] **R04 · P2 · Honor device locale and persist the user's language choice.**
+- [x] **R04 · P2 · Honor device locale and persist the user's language choice.**
   **Evidence:** `lib/src/app/bloc/app_state.dart:13`,
   `lib/src/app/bloc/app_bloc.dart:214`, `lib/main.dart:154`,
   `lib/src/settings/presentation/pages/settings_page.dart:51`.
@@ -71,6 +72,7 @@ Passing component tests does not validate the full application or native device 
   **Done when:** first launch uses supported device-locale resolution, an explicit
   choice survives restart, and unsupported locales fall back consistently. Test
   English, Spanish, unsupported locale, and persisted override.
+  **Implemented:** `codex/r04-locale-persistence` (PR #19). Details: [`R04-LOCALE-PERSISTENCE.md`](../agent-comms/R04-LOCALE-PERSISTENCE.md).
 
 - [ ] **R05 · P3 · Make formatting and toolchain validation reproducible.**
   **Evidence:** `.github/workflows/flutter.yml:8`, `:23`, `:35` use unpinned
