@@ -1,6 +1,6 @@
 part of 'app_bloc.dart';
 
-class AppState {
+class AppState extends Equatable {
   final Locale locale;
   final List<PrayerSession> sessions;
   final List<Reminder> reminders;
@@ -26,6 +26,7 @@ class AppState {
     List<Reminder>? reminders,
     bool? loading,
     String? error,
+    bool clearError = false,
     int? audioBytes,
     bool? onboardingComplete,
   }) {
@@ -34,11 +35,22 @@ class AppState {
       sessions: sessions ?? this.sessions,
       reminders: reminders ?? this.reminders,
       loading: loading ?? this.loading,
-      error: error ?? this.error,
+      error: clearError ? null : (error ?? this.error),
       audioBytes: audioBytes ?? this.audioBytes,
       onboardingComplete: onboardingComplete ?? this.onboardingComplete,
     );
   }
 
   PrayerProgress progress(DateTime now) => calculateProgress(sessions, now);
+
+  @override
+  List<Object?> get props => [
+    locale,
+    sessions,
+    reminders,
+    loading,
+    error,
+    audioBytes,
+    onboardingComplete,
+  ];
 }
