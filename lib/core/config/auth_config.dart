@@ -19,31 +19,28 @@ class AuthConfig {
 
   factory AuthConfig.fromMap(Map<String, String> env) {
     final backendStr = env['AUTH_BACKEND'] ?? '';
-
-    final backend = backendStr == 'fake'
-        ? AuthBackend.fake
-        : AuthBackend.appwrite;
-
     final endpoint = env['APPWRITE_ENDPOINT'] ?? '';
     final projectId = env['APPWRITE_PROJECT_ID'] ?? '';
 
     final effectiveEndpoint = endpoint.isEmpty ? null : endpoint;
     final effectiveProjectId = projectId.isEmpty ? null : projectId;
 
-    if (backend == AuthBackend.appwrite) {
-      if (effectiveEndpoint == null || effectiveProjectId == null) {
-        throw StateError(
-          'Missing APPWRITE_ENDPOINT or APPWRITE_PROJECT_ID configuration. '
-          'Appwrite is the default backend. To use the fake backend, '
-          'explicitly pass --dart-define=AUTH_BACKEND=fake.',
-        );
-      }
-    }
+    final hasAppwriteConfig =
+        effectiveEndpoint != null && effectiveProjectId != null;
+    final backend = backendStr == 'fake'
+        ? AuthBackend.fake
+        : hasAppwriteConfig
+            ? AuthBackend.appwrite
+            : AuthBackend.fake;
 
     return AuthConfig._(
       backend: backend,
-      appwriteEndpoint: effectiveEndpoint,
-      appwriteProjectId: effectiveProjectId,
+      appwriteEndpoint: backend == AuthBackend.appwrite
+          ? effectiveEndpoint
+          : null,
+      appwriteProjectId: backend == AuthBackend.appwrite
+          ? effectiveProjectId
+          : null,
     );
   }
 }

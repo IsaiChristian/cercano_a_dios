@@ -72,11 +72,8 @@ Future<AppBootstrapResult> bootstrap({
             projectId == null ||
             endpoint.isEmpty ||
             projectId.isEmpty) {
-          throw StateError(
-            'Missing APPWRITE_ENDPOINT or APPWRITE_PROJECT_ID configuration. '
-            'Appwrite is the default backend. To use the fake backend, '
-            'explicitly pass --dart-define=AUTH_BACKEND=fake.',
-          );
+          effectiveAuthRepo = FakeAuthRepository();
+          break;
         }
         final client = Client()
           ..setEndpoint(endpoint)

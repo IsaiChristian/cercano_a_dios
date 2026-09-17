@@ -87,18 +87,18 @@ void main() {
     await result.dispose();
   });
 
-  test(
-    'missing Appwrite configuration throws StateError and never silently falls back to fake',
-    () async {
-      expect(
-        () => bootstrap(
-          config: AuthConfig.fromMap(const {}),
-          deviceServices: testDevice,
-        ),
-        throwsA(isA<StateError>()),
-      );
-    },
-  );
+  test('missing Appwrite configuration falls back to FakeAuthRepository', () async {
+    final result = await bootstrap(
+      config: AuthConfig.fromMap(const {}),
+      deviceServices: testDevice,
+    );
+
+    expect(result.authRepository, isA<FakeAuthRepository>());
+    expect(result.authBloc, isA<AuthBloc>());
+    expect(result.appSessionBloc, isA<AppSessionBloc>());
+
+    await result.dispose();
+  });
 
   test(
     'AuthBloc sign-in events drive AppSessionBloc profile lifecycle',

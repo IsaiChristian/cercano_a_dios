@@ -20,23 +20,25 @@ void main() {
       expect(config.appwriteProjectId, isNull);
     });
 
-    test(
-      'missing Appwrite configuration throws StateError and never falls back to fake',
-      () {
-        expect(
-          () => AuthConfig.fromMap({
-            'APPWRITE_ENDPOINT': 'https://cloud.appwrite.io/v1',
-          }),
-          throwsStateError,
-        );
+    test('missing Appwrite configuration falls back to fake auth', () {
+      final partialEndpointConfig = AuthConfig.fromMap({
+        'APPWRITE_ENDPOINT': 'https://cloud.appwrite.io/v1',
+      });
+      expect(partialEndpointConfig.backend, equals(AuthBackend.fake));
+      expect(partialEndpointConfig.appwriteEndpoint, isNull);
+      expect(partialEndpointConfig.appwriteProjectId, isNull);
 
-        expect(
-          () => AuthConfig.fromMap({'APPWRITE_PROJECT_ID': 'proj-123'}),
-          throwsStateError,
-        );
+      final partialProjectConfig = AuthConfig.fromMap({
+        'APPWRITE_PROJECT_ID': 'proj-123',
+      });
+      expect(partialProjectConfig.backend, equals(AuthBackend.fake));
+      expect(partialProjectConfig.appwriteEndpoint, isNull);
+      expect(partialProjectConfig.appwriteProjectId, isNull);
 
-        expect(() => AuthConfig.fromMap({}), throwsStateError);
-      },
-    );
+      final emptyConfig = AuthConfig.fromMap({});
+      expect(emptyConfig.backend, equals(AuthBackend.fake));
+      expect(emptyConfig.appwriteEndpoint, isNull);
+      expect(emptyConfig.appwriteProjectId, isNull);
+    });
   });
 }
