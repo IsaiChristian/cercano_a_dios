@@ -9,9 +9,8 @@ export 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
 
-  AuthBloc({required AuthRepository authRepository})
-    : _authRepository = authRepository,
-      super(const AuthState()) {
+  AuthBloc({required this._authRepository})
+    : super(const AuthState()) {
     on<AuthSessionCheckRequested>(_onAuthSessionCheckRequested);
     on<AuthSignInRequested>(_onAuthSignInRequested);
     on<AuthSignUpRequested>(_onAuthSignUpRequested);
