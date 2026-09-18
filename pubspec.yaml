@@ -18,6 +18,7 @@ dependencies:
   path: ^1.9.1
   equatable: ^3.0.0
   appwrite: ^26.2.0
+  device_info_plus: 11.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
